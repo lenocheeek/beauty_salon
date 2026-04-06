@@ -3,51 +3,69 @@
 {% block title %}Предварительные записи{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center;">
+<div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
     <h2>📅 Предварительные записи</h2>
     {% if user.groups.all.0.name == 'Администратор' %}
         <a href="{% url 'appointment_add' %}" class="btn">+ Новая запись</a>
     {% endif %}
 </div>
 
-<table>
-    <thead>
-        <tr>
-            <th>Дата</th>
-            <th>Время</th>
-            <th>Клиент</th>
-            <th>Услуга</th>
-            <th>Сотрудник</th>
-            <th>Статус</th>
-            <th>Действия</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for app in appointments %}
-        <tr>
-            <td>{{ app.date|date:"d.m.Y" }}</td>
-            <td>{{ app.time|time:"H:i" }}</td>
-            <td>{{ app.client.last_name }} {{ app.client.first_name }}</td>
-            <td>{{ app.service.name }}</td>
-            <td>{{ app.employee.last_name }} {{ app.employee.first_name }}</td>
-            <td>
-                {% if app.status == 'scheduled' %}🟡 Запланировано
-                {% elif app.status == 'completed' %}✅ Выполнено
-                {% else %}❌ Отменено{% endif %}
-            </td>
-            <td>
-                {% if user.groups.all.0.name == 'Администратор' %}
-                    <a href="{% url 'appointment_edit' app.id %}">✏️</a>
-                    <a href="{% url 'appointment_delete' app.id %}" style="color: #e11d48;">🗑️</a>
-                    {% if app.status == 'scheduled' %}
-                        | <a href="{% url 'appointment_complete' app.id %}" style="color: #10b981;">✅ Отметить выполненным</a>
-                    {% endif %}
-                {% endif %}
-            </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="7">Нет предварительных записей</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div style="margin: 20px 0;">
+    <input type="text" id="searchInput" placeholder="🔍 Поиск по клиенту, услуге или сотруднику..." 
+           value="{{ search_query }}"
+           style="width: 100%; padding: 12px 20px; border-radius: 40px; border: 1px solid #fbc4d8; font-size: 16px; outline: none;">
+    <div id="searchLoader" style="display: none; text-align: center; margin-top: 10px; color: #d946ef;">⏳ Загрузка...</div>
+</div>
+
+<div id="appointmentsTableContainer">
+    {% include 'appointments/_appointments_table.html' with appointments=appointments %}
+</div>
+
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const container = document.getElementById('appointmentsTableContainer');
+    const loader = document.getElementById('searchLoader');
+    let searchTimeout;
+    
+    function performSearch() {
+        const query = searchInput.value;
+        loader.style.display = 'block';
+        fetch(`/appointments/?q=${encodeURIComponent(query)}`, {
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        })
+        .then(response => response.text())
+        .then(html => {
+            container.innerHTML = html;
+            loader.style.display = 'none';
+            attachPaginationEvents();
+        });
+    }
+    
+    function attachPaginationEvents() {
+        document.querySelectorAll('.page-link').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const url = this.href;
+                const query = searchInput.value;
+                loader.style.display = 'block';
+                fetch(`${url}&q=${encodeURIComponent(query)}`, {
+                    headers: {'X-Requested-With': 'XMLHttpRequest'}
+                })
+                .then(response => response.text())
+                .then(html => {
+                    container.innerHTML = html;
+                    loader.style.display = 'none';
+                    attachPaginationEvents();
+                });
+            });
+        });
+    }
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(performSearch, 300);
+    });
+    
+    attachPaginationEvents();
+</script>
 {% endblock %}

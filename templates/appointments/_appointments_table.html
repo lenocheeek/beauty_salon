@@ -1,0 +1,58 @@
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Дата</th>
+            <th>Время</th>
+            <th>Клиент</th>
+            <th>Услуга</th>
+            <th>Сотрудник</th>
+            <th>Статус</th>
+            {% if user.groups.all.0.name == 'Администратор' %}
+                <th>Действия</th>
+            {% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for app in appointments %}
+        <tr>
+            <td>{{ app.date|date:"d.m.Y" }}</div></td>
+            <td>{{ app.time|time:"H:i" }}</div></td>
+            <td>{{ app.client.last_name }} {{ app.client.first_name }}</div></td>
+            <td>{{ app.service.name }}</div></td>
+            <td>{{ app.employee.last_name }} {{ app.employee.first_name }}</div></td>
+            <td>
+                {% if app.status == 'scheduled' %}🟡 Запланировано
+                {% elif app.status == 'completed' %}✅ Выполнено
+                {% else %}❌ Отменено{% endif %}
+            </td>
+            {% if user.groups.all.0.name == 'Администратор' %}
+                <td>
+                    <a href="{% url 'appointment_edit' app.id %}">✏️</a>
+                    <a href="{% url 'appointment_delete' app.id %}" style="color: #e11d48;">🗑️</a>
+                    {% if app.status == 'scheduled' %}
+                        | <a href="{% url 'appointment_complete' app.id %}" style="color: #10b981;">✅</a>
+                    {% endif %}
+                </td>
+            {% endif %}
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">Нет предварительных записей</div></td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if appointments.has_other_pages %}
+<div class="pagination" style="margin-top: 20px; display: flex; justify-content: center; gap: 10px;">
+    {% if appointments.has_previous %}
+        <a href="?page=1" class="page-link btn">« Первая</a>
+        <a href="?page={{ appointments.previous_page_number }}" class="page-link btn">‹ Предыдущая</a>
+    {% endif %}
+    <span class="current" style="padding: 8px 16px; background: #f3e8ff; border-radius: 40px;">
+        Страница {{ appointments.number }} из {{ appointments.paginator.num_pages }}
+    </span>
+    {% if appointments.has_next %}
+        <a href="?page={{ appointments.next_page_number }}" class="page-link btn">Следующая ›</a>
+        <a href="?page={{ appointments.paginator.num_pages }}" class="page-link btn">Последняя »</a>
+    {% endif %}
+</div>
+{% endif %}

@@ -1,0 +1,18 @@
+# Виртуальное окружение
+venv/
+__pycache__/
+*.pyc
+
+# База данных
+*.sqlite3
+db.sqlite3
+
+# Настройки с секретами (если есть)
+salon_project/settings_local.py
+
+# Файлы IDE
+.vscode/
+.idea/
+
+# Миграции (опционально, лучше их хранить, но можно игнорировать)
+# */migrations/00*.py

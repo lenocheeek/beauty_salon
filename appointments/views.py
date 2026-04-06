@@ -1,13 +1,33 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.db import models
 from salon_project.decorators import admin_required
 from .models import Appointment
 from .forms import AppointmentForm
+from procedures.models import PerformedProcedure
 
 @login_required
 def appointment_list(request):
-    appointments = Appointment.objects.select_related('client', 'employee', 'service').order_by('date', 'time')
-    return render(request, 'appointments/appointment_list.html', {'appointments': appointments})
+    appointments_list = Appointment.objects.select_related('client', 'employee', 'service').order_by('date', 'time')
+    
+    search_query = request.GET.get('q', '')
+    if search_query:
+        appointments_list = appointments_list.filter(
+            models.Q(client__last_name__icontains=search_query) |
+            models.Q(client__first_name__icontains=search_query) |
+            models.Q(service__name__icontains=search_query) |
+            models.Q(employee__last_name__icontains=search_query)
+        )
+    
+    paginator = Paginator(appointments_list, 10)
+    page_number = request.GET.get('page')
+    appointments = paginator.get_page(page_number)
+    
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'appointments/_appointments_table.html', {'appointments': appointments})
+    
+    return render(request, 'appointments/appointment_list.html', {'appointments': appointments, 'search_query': search_query})
 
 @admin_required
 def appointment_add(request):
@@ -42,19 +62,15 @@ def appointment_delete(request, pk):
 
 @admin_required
 def appointment_complete(request, pk):
-    """Отметить запись как выполненную и создать процедуру"""
     appointment = get_object_or_404(Appointment, pk=pk)
     if request.method == 'POST':
-        # Создаём выполненную процедуру
-        from procedures.models import PerformedProcedure
         PerformedProcedure.objects.create(
             client=appointment.client,
             employee=appointment.employee,
             service=appointment.service,
             price_at_moment=appointment.service.price,
-            date=appointment.date  # используем дату записи
+            date=appointment.date
         )
-        # Обновляем статус записи
         appointment.status = 'completed'
         appointment.save()
         return redirect('appointment_list')

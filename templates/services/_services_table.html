@@ -1,0 +1,47 @@
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Название</th>
+            <th>Цена (руб.)</th>
+            <th>Длительность (мин)</th>
+            <th>Активна</th>
+            {% if user.groups.all.0.name == 'Администратор' %}
+                <th>Действия</th>
+            {% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for service in services %}
+        <tr>
+            <td>{{ service.name }}</div></td>
+            <td>{{ service.price }}</div></td>
+            <td>{{ service.duration_minutes }}</div></td>
+            <td>{% if service.is_active %}✅{% else %}❌{% endif %}</div></td>
+            {% if user.groups.all.0.name == 'Администратор' %}
+                <td>
+                    <a href="{% url 'service_edit' service.id %}">✏️</a>
+                    <a href="{% url 'service_delete' service.id %}" style="color: #e11d48;">🗑️</a>
+                </td>
+            {% endif %}
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">Нет услуг</div></td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if services.has_other_pages %}
+<div class="pagination" style="margin-top: 20px; display: flex; justify-content: center; gap: 10px;">
+    {% if services.has_previous %}
+        <a href="?page=1" class="page-link btn">« Первая</a>
+        <a href="?page={{ services.previous_page_number }}" class="page-link btn">‹ Предыдущая</a>
+    {% endif %}
+    <span class="current" style="padding: 8px 16px; background: #f3e8ff; border-radius: 40px;">
+        Страница {{ services.number }} из {{ services.paginator.num_pages }}
+    </span>
+    {% if services.has_next %}
+        <a href="?page={{ services.next_page_number }}" class="page-link btn">Следующая ›</a>
+        <a href="?page={{ services.paginator.num_pages }}" class="page-link btn">Последняя »</a>
+    {% endif %}
+</div>
+{% endif %}

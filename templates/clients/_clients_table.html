@@ -1,0 +1,51 @@
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Фамилия</th>
+            <th>Имя</th>
+            <th>Телефон</th>
+            <th>Email</th>
+            <th>Дата регистрации</th>
+            <th>Действия</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for client in clients %}
+        <tr>
+            <td>{{ client.last_name }}</div></td>
+            <td>{{ client.first_name }}</div></td>
+            <td>{{ client.phone }}</div></td>
+            <td>{{ client.email|default:"—" }}</div></td>
+            <td>{{ client.registration_date|date:"d.m.Y" }}</div></td>
+            <td>
+                <a href="{% url 'client_detail' client.id %}">Подробнее</a>
+                {% if user.groups.all.0.name == 'Администратор' %}
+                    | <a href="{% url 'client_edit' client.id %}">✏️</a>
+                    | <a href="{% url 'client_delete' client.id %}" style="color: #e11d48;">🗑️</a>
+                {% endif %}
+            </div></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">Нет клиентов</div></td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Пагинация -->
+{% if clients.has_other_pages %}
+<div class="pagination" style="margin-top: 20px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+    {% if clients.has_previous %}
+        <a href="?page=1" class="page-link btn">« Первая</a>
+        <a href="?page={{ clients.previous_page_number }}" class="page-link btn">‹ Предыдущая</a>
+    {% endif %}
+
+    <span class="current" style="padding: 8px 16px; background: #f3e8ff; border-radius: 40px;">
+        Страница {{ clients.number }} из {{ clients.paginator.num_pages }}
+    </span>
+
+    {% if clients.has_next %}
+        <a href="?page={{ clients.next_page_number }}" class="page-link btn">Следующая ›</a>
+        <a href="?page={{ clients.paginator.num_pages }}" class="page-link btn">Последняя »</a>
+    {% endif %}
+</div>
+{% endif %}

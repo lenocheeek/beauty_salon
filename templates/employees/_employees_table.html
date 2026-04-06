@@ -1,0 +1,47 @@
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Фамилия</th>
+            <th>Имя</th>
+            <th>Специализация</th>
+            <th>Дата найма</th>
+            {% if user.groups.all.0.name == 'Администратор' %}
+                <th>Действия</th>
+            {% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for emp in employees %}
+        <tr>
+            <td>{{ emp.last_name }}</div></td>
+            <td>{{ emp.first_name }}</div></td>
+            <td>{{ emp.specialization|default:"—" }}</div></td>
+            <td>{{ emp.hire_date|date:"d.m.Y" }}</div></td>
+            {% if user.groups.all.0.name == 'Администратор' %}
+                <td>
+                    <a href="{% url 'employee_edit' emp.id %}">✏️</a>
+                    <a href="{% url 'employee_delete' emp.id %}" style="color: #e11d48;">🗑️</a>
+                </td>
+            {% endif %}
+        </tr>
+        {% empty %}
+        <tr><td colspan="5">Нет сотрудников</div></td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if employees.has_other_pages %}
+<div class="pagination" style="margin-top: 20px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+    {% if employees.has_previous %}
+        <a href="?page=1" class="page-link btn">« Первая</a>
+        <a href="?page={{ employees.previous_page_number }}" class="page-link btn">‹ Предыдущая</a>
+    {% endif %}
+    <span class="current" style="padding: 8px 16px; background: #f3e8ff; border-radius: 40px;">
+        Страница {{ employees.number }} из {{ employees.paginator.num_pages }}
+    </span>
+    {% if employees.has_next %}
+        <a href="?page={{ employees.next_page_number }}" class="page-link btn">Следующая ›</a>
+        <a href="?page={{ employees.paginator.num_pages }}" class="page-link btn">Последняя »</a>
+    {% endif %}
+</div>
+{% endif %}

@@ -1,0 +1,49 @@
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Дата</th>
+            <th>Клиент</th>
+            <th>Услуга</th>
+            <th>Сотрудник</th>
+            <th>Стоимость</th>
+            {% if user.groups.all.0.name == 'Администратор' %}
+                <th>Действия</th>
+            {% endif %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for proc in procedures %}
+        <tr>
+            <td>{{ proc.date|date:"d.m.Y H:i" }}</div></td>
+            <td>{{ proc.client.last_name }} {{ proc.client.first_name }}</div></td>
+            <td>{{ proc.service.name }}</div></td>
+            <td>{{ proc.employee.last_name }} {{ proc.employee.first_name }}</div></td>
+            <td>{{ proc.price_at_moment }} ₽</div></td>
+            {% if user.groups.all.0.name == 'Администратор' %}
+                <td>
+                    <a href="{% url 'procedure_edit' proc.id %}">✏️</a>
+                    <a href="{% url 'procedure_delete' proc.id %}" style="color: #e11d48;">🗑️</a>
+                </td>
+            {% endif %}
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">Нет выполненных процедур</div></td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if procedures.has_other_pages %}
+<div class="pagination" style="margin-top: 20px; display: flex; justify-content: center; gap: 10px;">
+    {% if procedures.has_previous %}
+        <a href="?page=1" class="page-link btn">« Первая</a>
+        <a href="?page={{ procedures.previous_page_number }}" class="page-link btn">‹ Предыдущая</a>
+    {% endif %}
+    <span class="current" style="padding: 8px 16px; background: #f3e8ff; border-radius: 40px;">
+        Страница {{ procedures.number }} из {{ procedures.paginator.num_pages }}
+    </span>
+    {% if procedures.has_next %}
+        <a href="?page={{ procedures.next_page_number }}" class="page-link btn">Следующая ›</a>
+        <a href="?page={{ procedures.paginator.num_pages }}" class="page-link btn">Последняя »</a>
+    {% endif %}
+</div>
+{% endif %}
