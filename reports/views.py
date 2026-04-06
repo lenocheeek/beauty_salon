@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Count
+from django.core.paginator import Paginator
 from django.http import HttpResponse
 from salon_project.decorators import chief_required
 from procedures.models import PerformedProcedure
@@ -136,9 +137,14 @@ def report_revenue(request):
                     chart_base64 = base64.b64encode(chart_img.getvalue()).decode('utf-8')
                     chart = f"data:image/png;base64,{chart_base64}"
 
+    # Пагинация для daily_data
+    paginator = Paginator(daily_data, 15)  # 15 записей на страницу
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     return render(request, 'reports/revenue.html', {
         'form': form,
-        'daily_data': daily_data,
+        'daily_data': page_obj,
         'total': total,
         'start_date': start_date,
         'end_date': end_date,
@@ -188,7 +194,6 @@ def report_staff_load(request):
                           .annotate(count=Count('id'))
                           .order_by('-count'))
             
-            # Генерируем график
             chart_img = None
             if staff_data:
                 chart_data = []
@@ -232,9 +237,14 @@ def report_staff_load(request):
                 chart_base64 = base64.b64encode(chart_img.getvalue()).decode('utf-8')
                 chart = f"data:image/png;base64,{chart_base64}"
 
+    # Пагинация для staff_data
+    paginator = Paginator(staff_data, 15)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     return render(request, 'reports/staff_load.html', {
         'form': form,
-        'staff_data': staff_data,
+        'staff_data': page_obj,
         'start_date': start_date,
         'end_date': end_date,
         'chart': chart,
@@ -303,7 +313,6 @@ def report_services_popularity(request):
             for item in services_data:
                 item['percent'] = round(item['count'] / total_count * 100, 1) if total_count > 0 else 0
             
-            # Генерируем график
             chart_img = None
             if services_data:
                 chart_img = generate_pie_chart(services_data, 'service__name', 'count', 'Популярность услуг')
@@ -341,9 +350,14 @@ def report_services_popularity(request):
             chart_base64 = base64.b64encode(chart_img.getvalue()).decode('utf-8')
             chart = f"data:image/png;base64,{chart_base64}"
 
+    # Пагинация для services_data
+    paginator = Paginator(services_data, 15)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
     return render(request, 'reports/services_popularity.html', {
         'form': form,
-        'services_data': services_data,
+        'services_data': page_obj,
         'total_count': total_count,
         'start_date': start_date,
         'end_date': end_date,

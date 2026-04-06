@@ -9,11 +9,11 @@
     <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
         <div>
             <label>С даты:</label>
-            <input type="date" name="start_date" value="{{ request.GET.start_date }}">
+            <input type="date" name="start_date" value="{{ request.GET.start_date }}" style="padding: 10px; border-radius: 40px; border: 1px solid #fbc4d8;">
         </div>
         <div>
             <label>По дату:</label>
-            <input type="date" name="end_date" value="{{ request.GET.end_date }}">
+            <input type="date" name="end_date" value="{{ request.GET.end_date }}" style="padding: 10px; border-radius: 40px; border: 1px solid #fbc4d8;">
         </div>
         <div>
             <button type="submit" name="submit" value="1">Показать</button>
@@ -41,22 +41,41 @@
                 <tbody>
                     {% for day in daily_data %}
                     <tr>
-                        <td>{{ day.day|date:"d.m.Y" }}</td>
-                        <td>{{ day.count }}</td>
-                        <td>{{ day.total|floatformat:2 }} ₽</td>
+                        <td>{{ day.day|date:"d.m.Y" }}</div></td>
+                        <td>{{ day.count }}</div></td>
+                        <td>{{ day.total|floatformat:2 }} ₽</div></td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="3">Нет данных за выбранный период</td></tr>
+                    <tr><td colspan="3">Нет данных за выбранный период</div></td></tr>
                     {% endfor %}
                 </tbody>
                 <tfoot style="background: #fdf2f8; font-weight: bold;">
                     <tr>
-                        <td><strong>ИТОГО</strong></td>
-                        <td><strong>{{ daily_data|length }}</strong></td>
-                        <td><strong>{{ total|floatformat:2 }} ₽</strong></td>
+                        <td><strong>ИТОГО</strong></div></td>
+                        <td><strong>{{ daily_data|length }}</strong></div></td>
+                        <td><strong>{{ total|floatformat:2 }} ₽</strong></div></td>
                     </tr>
                 </tfoot>
             </table>
+            
+            <!-- Пагинация -->
+            {% if daily_data.has_other_pages %}
+            <div class="pagination" style="margin-top: 20px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                {% if daily_data.has_previous %}
+                    <a href="?page=1{% if start_date %}&start_date={{ start_date|date:'Y-m-d' }}{% endif %}{% if end_date %}&end_date={{ end_date|date:'Y-m-d' }}{% endif %}&submit=1" class="btn">« Первая</a>
+                    <a href="?page={{ daily_data.previous_page_number }}{% if start_date %}&start_date={{ start_date|date:'Y-m-d' }}{% endif %}{% if end_date %}&end_date={{ end_date|date:'Y-m-d' }}{% endif %}&submit=1" class="btn">‹ Предыдущая</a>
+                {% endif %}
+
+                <span class="current" style="padding: 8px 16px; background: #f3e8ff; border-radius: 40px;">
+                    Страница {{ daily_data.number }} из {{ daily_data.paginator.num_pages }}
+                </span>
+
+                {% if daily_data.has_next %}
+                    <a href="?page={{ daily_data.next_page_number }}{% if start_date %}&start_date={{ start_date|date:'Y-m-d' }}{% endif %}{% if end_date %}&end_date={{ end_date|date:'Y-m-d' }}{% endif %}&submit=1" class="btn">Следующая ›</a>
+                    <a href="?page={{ daily_data.paginator.num_pages }}{% if start_date %}&start_date={{ start_date|date:'Y-m-d' }}{% endif %}{% if end_date %}&end_date={{ end_date|date:'Y-m-d' }}{% endif %}&submit=1" class="btn">Последняя »</a>
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
         
         {% if chart %}

@@ -45,40 +45,66 @@
     {% endif %}
     <p><strong>Всего процедур:</strong> {{ total_count }}</p>
 
-    {% if chart %}
-        <div style="margin: 30px 0; text-align: center; background: white; padding: 20px; border-radius: 20px;">
-            <img src="{{ chart }}" style="max-width: 100%; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-        </div>
-    {% endif %}
+    <div style="display: flex; flex-wrap: wrap; gap: 30px;">
+        <div style="flex: 2; min-width: 300px;">
+            <h3>Детализация по услугам</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Услуга</th>
+                        <th>Кол-во выполнений</th>
+                        <th>Доля</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in services_data %}
+                    <tr>
+                        <td>{{ item.service__name }}</div></td>
+                        <td>{{ item.count }}</div></td>
+                        <td>{{ item.percent }}%</div></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3">Нет данных за выбранный период</div></td></tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot style="background: #fdf2f8; font-weight: bold;">
+                    <tr>
+                        <td><strong>ИТОГО</strong></div></td>
+                        <td><strong>{{ total_count }}</strong></div></td>
+                        <td><strong>100%</strong></div></td>
+                    </tr>
+                </tfoot>
+            </table>
+            
+            <!-- Пагинация -->
+            {% if services_data.has_other_pages %}
+            <div class="pagination" style="margin-top: 20px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                {% if services_data.has_previous %}
+                    <a href="?page=1{% if start_date %}&start_date={{ start_date|date:'Y-m-d' }}{% endif %}{% if end_date %}&end_date={{ end_date|date:'Y-m-d' }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}&submit=1" class="btn">« Первая</a>
+                    <a href="?page={{ services_data.previous_page_number }}{% if start_date %}&start_date={{ start_date|date:'Y-m-d' }}{% endif %}{% if end_date %}&end_date={{ end_date|date:'Y-m-d' }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}&submit=1" class="btn">‹ Предыдущая</a>
+                {% endif %}
 
-    <h3>Детализация по услугам</h3>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Услуга</th>
-                <th>Кол-во выполнений</th>
-                <th>Доля</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in services_data %}
-            <tr>
-                <td>{{ item.service__name }}</div></td>
-                <td>{{ item.count }}</div></td>
-                <td>{{ item.percent }}%</div></td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="3">Нет данных за выбранный период</div></td></tr>
-            {% endfor %}
-        </tbody>
-        <tfoot style="background: #fdf2f8; font-weight: bold;">
-            <tr>
-                <td><strong>ИТОГО</strong></div></td>
-                <td><strong>{{ total_count }}</strong></div></td>
-                <td><strong>100%</strong></div></td>
-            </tr>
-        </tfoot>
-    </table>
+                <span class="current" style="padding: 8px 16px; background: #f3e8ff; border-radius: 40px;">
+                    Страница {{ services_data.number }} из {{ services_data.paginator.num_pages }}
+                </span>
+
+                {% if services_data.has_next %}
+                    <a href="?page={{ services_data.next_page_number }}{% if start_date %}&start_date={{ start_date|date:'Y-m-d' }}{% endif %}{% if end_date %}&end_date={{ end_date|date:'Y-m-d' }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}&submit=1" class="btn">Следующая ›</a>
+                    <a href="?page={{ services_data.paginator.num_pages }}{% if start_date %}&start_date={{ start_date|date:'Y-m-d' }}{% endif %}{% if end_date %}&end_date={{ end_date|date:'Y-m-d' }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}&submit=1" class="btn">Последняя »</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        {% if chart %}
+        <div style="flex: 3; min-width: 400px;">
+            <h3>Круговая диаграмма</h3>
+            <div style="background: white; padding: 20px; border-radius: 20px;">
+                <img src="{{ chart }}" style="max-width: 100%; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            </div>
+        </div>
+        {% endif %}
+    </div>
 {% else %}
     <p>Выберите период и нажмите "Показать".</p>
 {% endif %}

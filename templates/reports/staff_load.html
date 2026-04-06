@@ -30,39 +30,65 @@
 {% if has_data %}
     <p><strong>Период:</strong> {{ start_date|date:"d.m.Y" }} — {{ end_date|date:"d.m.Y" }}</p>
 
-    {% if chart %}
-        <div style="margin: 30px 0; text-align: center; background: white; padding: 20px; border-radius: 20px;">
-            <img src="{{ chart }}" style="max-width: 100%; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-        </div>
-    {% endif %}
+    <div style="display: flex; flex-wrap: wrap; gap: 30px;">
+        <div style="flex: 2; min-width: 300px;">
+            <h3>Детализация по сотрудникам</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Сотрудник</th>
+                        <th>Специализация</th>
+                        <th>Кол-во процедур</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in staff_data %}
+                    <tr>
+                        <td>{{ item.employee__last_name }} {{ item.employee__first_name }}</div></td>
+                        <td>{{ item.employee__specialization|default:"—" }}</div></td>
+                        <td>{{ item.count }}</div></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3">Нет данных за выбранный период</div></td></tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot style="background: #fdf2f8; font-weight: bold;">
+                    <tr>
+                        <td colspan="2"><strong>ИТОГО</strong></div></td>
+                        <td><strong>{{ staff_data|length }}</strong></div></td>
+                    </tr>
+                </tfoot>
+            </table>
+            
+            <!-- Пагинация -->
+            {% if staff_data.has_other_pages %}
+            <div class="pagination" style="margin-top: 20px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                {% if staff_data.has_previous %}
+                    <a href="?page=1{% if start_date %}&start_date={{ start_date|date:'Y-m-d' }}{% endif %}{% if end_date %}&end_date={{ end_date|date:'Y-m-d' }}{% endif %}&submit=1" class="btn">« Первая</a>
+                    <a href="?page={{ staff_data.previous_page_number }}{% if start_date %}&start_date={{ start_date|date:'Y-m-d' }}{% endif %}{% if end_date %}&end_date={{ end_date|date:'Y-m-d' }}{% endif %}&submit=1" class="btn">‹ Предыдущая</a>
+                {% endif %}
 
-    <h3>Детализация по сотрудникам</h3>
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Сотрудник</th>
-                <th>Специализация</th>
-                <th>Кол-во процедур</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for item in staff_data %}
-            <tr>
-                <td>{{ item.employee__last_name }} {{ item.employee__first_name }}</div></td>
-                <td>{{ item.employee__specialization|default:"—" }}</div></td>
-                <td>{{ item.count }}</div></td>
-            </tr>
-            {% empty %}
-            <tr><td colspan="3">Нет данных за выбранный период</div></td></tr>
-            {% endfor %}
-        </tbody>
-        <tfoot style="background: #fdf2f8; font-weight: bold;">
-            <tr>
-                <td colspan="2"><strong>ИТОГО</strong></div></td>
-                <td><strong>{{ staff_data|length }}</strong></div></td>
-            </tr>
-        </tfoot>
-    </table>
+                <span class="current" style="padding: 8px 16px; background: #f3e8ff; border-radius: 40px;">
+                    Страница {{ staff_data.number }} из {{ staff_data.paginator.num_pages }}
+                </span>
+
+                {% if staff_data.has_next %}
+                    <a href="?page={{ staff_data.next_page_number }}{% if start_date %}&start_date={{ start_date|date:'Y-m-d' }}{% endif %}{% if end_date %}&end_date={{ end_date|date:'Y-m-d' }}{% endif %}&submit=1" class="btn">Следующая ›</a>
+                    <a href="?page={{ staff_data.paginator.num_pages }}{% if start_date %}&start_date={{ start_date|date:'Y-m-d' }}{% endif %}{% if end_date %}&end_date={{ end_date|date:'Y-m-d' }}{% endif %}&submit=1" class="btn">Последняя »</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        
+        {% if chart %}
+        <div style="flex: 3; min-width: 400px;">
+            <h3>График загрузки сотрудников</h3>
+            <div style="background: white; padding: 20px; border-radius: 20px;">
+                <img src="{{ chart }}" style="max-width: 100%; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            </div>
+        </div>
+        {% endif %}
+    </div>
 {% else %}
     <p>Выберите период и нажмите "Показать".</p>
 {% endif %}
