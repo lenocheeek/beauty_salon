@@ -10,62 +10,203 @@
     {% endif %}
 </div>
 
-<div style="margin: 20px 0;">
-    <input type="text" id="searchInput" placeholder="🔍 Поиск по клиенту, услуге или сотруднику..." 
-           value="{{ search_query }}"
-           style="width: 100%; padding: 12px 20px; border-radius: 40px; border: 1px solid #fbc4d8; font-size: 16px; outline: none;">
-    <div id="searchLoader" style="display: none; text-align: center; margin-top: 10px; color: #d946ef;">⏳ Загрузка...</div>
+<!-- Форма фильтрации -->
+<div style="background: #f9f0ff; padding: 20px; border-radius: 20px; margin: 20px 0;">
+    <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;">
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <div>
+                <label>Дата от:</label>
+                <input type="date" id="start_date" value="{{ start_date }}" style="padding: 10px; border-radius: 40px; border: 1px solid #fbc4d8; width: 150px;">
+            </div>
+            <div>
+                <label>Дата до:</label>
+                <input type="date" id="end_date" value="{{ end_date }}" style="padding: 10px; border-radius: 40px; border: 1px solid #fbc4d8; width: 150px;">
+            </div>
+            <div>
+                <label>Сотрудник:</label>
+                <select id="employee_filter" style="padding: 10px; border-radius: 40px; border: 1px solid #fbc4d8; min-width: 160px;">
+                    <option value="">Все сотрудники</option>
+                    {% for emp in employees %}
+                        <option value="{{ emp.id }}" {% if employee_id == emp.id|stringformat:"s" %}selected{% endif %}>
+                            {{ emp.last_name }} {{ emp.first_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Услуга:</label>
+                <select id="service_filter" style="padding: 10px; border-radius: 40px; border: 1px solid #fbc4d8; min-width: 180px;">
+                    <option value="">Все услуги</option>
+                    {% for serv in services %}
+                        <option value="{{ serv.id }}" {% if service_id == serv.id|stringformat:"s" %}selected{% endif %}>
+                            {{ serv.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label>Поиск:</label>
+                <input type="text" id="search_input" placeholder="Клиент, услуга, сотрудник..." value="{{ search_query }}" 
+                       style="padding: 10px; border-radius: 40px; border: 1px solid #fbc4d8; min-width: 220px;">
+            </div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button id="apply_filters" class="btn" style="background: #d946ef;">🔍 Применить</button>
+            <button id="reset_filters" class="btn" style="background: #6c757d;">Сбросить</button>
+        </div>
+    </div>
 </div>
 
+<!-- Контейнер для таблицы -->
 <div id="proceduresTableContainer">
-    {% include 'procedures/_procedures_table.html' with procedures=procedures %}
+    {% include 'procedures/_procedures_table.html' %}
 </div>
 
 <script>
-    const searchInput = document.getElementById('searchInput');
-    const container = document.getElementById('proceduresTableContainer');
-    const loader = document.getElementById('searchLoader');
-    let searchTimeout;
-    
-    function performSearch() {
-        const query = searchInput.value;
-        loader.style.display = 'block';
-        fetch(`/procedures/?q=${encodeURIComponent(query)}`, {
-            headers: {'X-Requested-With': 'XMLHttpRequest'}
+    function getFilterParams() {
+        return {
+            start_date: document.getElementById('start_date').value,
+            end_date: document.getElementById('end_date').value,
+            employee: document.getElementById('employee_filter').value,
+            service: document.getElementById('service_filter').value,
+            search: document.getElementById('search_input').value,
+        };
+    }
+
+    function updateTable() {
+        const params = getFilterParams();
+        const url = new URL(window.location.href);
+        
+        Object.keys(params).forEach(key => {
+            if (params[key]) {
+                url.searchParams.set(key, params[key]);
+            } else {
+                url.searchParams.delete(key);
+            }
+        });
+        
+        fetch(url.pathname + url.search, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(response => response.text())
         .then(html => {
-            container.innerHTML = html;
-            loader.style.display = 'none';
+            document.getElementById('proceduresTableContainer').innerHTML = html;
             attachPaginationEvents();
         });
     }
-    
+
     function attachPaginationEvents() {
         document.querySelectorAll('.page-link').forEach(link => {
             link.addEventListener('click', function(e) {
                 e.preventDefault();
                 const url = this.href;
-                const query = searchInput.value;
-                loader.style.display = 'block';
-                fetch(`${url}&q=${encodeURIComponent(query)}`, {
-                    headers: {'X-Requested-With': 'XMLHttpRequest'}
+                fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 })
                 .then(response => response.text())
                 .then(html => {
-                    container.innerHTML = html;
-                    loader.style.display = 'none';
+                    document.getElementById('proceduresTableContainer').innerHTML = html;
                     attachPaginationEvents();
+                    
+                    // Сохраняем текущие значения фильтров в полях
+                    const params = getFilterParams();
+                    Object.keys(params).forEach(key => {
+                        if (params[key]) {
+                            const el = document.getElementById(key === 'employee' ? 'employee_filter' : 
+                                                          key === 'service' ? 'service_filter' : 
+                                                          key === 'search' ? 'search_input' : key);
+                            if (el) el.value = params[key];
+                        }
+                    });
                 });
             });
         });
     }
+
+    // Применение фильтров по кнопке
+    document.getElementById('apply_filters').addEventListener('click', updateTable);
     
-    searchInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(performSearch, 300);
+    // Сброс фильтров
+    document.getElementById('reset_filters').addEventListener('click', function() {
+        document.getElementById('start_date').value = '';
+        document.getElementById('end_date').value = '';
+        document.getElementById('employee_filter').value = '';
+        document.getElementById('service_filter').value = '';
+        document.getElementById('search_input').value = '';
+        updateTable();
     });
+    
+    // Динамический поиск при вводе (с задержкой)
+    let searchTimeout;
+    document.getElementById('search_input').addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(updateTable, 300);
+    });
+    
+    // Динамическая фильтрация при смене дат и выпадающих списков (опционально)
+    document.getElementById('start_date').addEventListener('change', updateTable);
+    document.getElementById('end_date').addEventListener('change', updateTable);
+    document.getElementById('employee_filter').addEventListener('change', updateTable);
+    document.getElementById('service_filter').addEventListener('change', updateTable);
     
     attachPaginationEvents();
 </script>
+
+<style>
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    .data-table th {
+        background: #fdf2f8;
+        color: #831843;
+        padding: 14px 12px;
+        font-weight: 600;
+        text-align: left;
+    }
+    .data-table td {
+        padding: 12px;
+        border-bottom: 1px solid #fce7f3;
+        color: #2c3e50;
+    }
+    .btn {
+        background: linear-gradient(135deg, #ec489a, #d946ef);
+        border: none;
+        padding: 10px 24px;
+        border-radius: 40px;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+        font-size: 0.9rem;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 14px rgba(217,70,239,0.3);
+    }
+    .pagination {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    .pagination .btn {
+        background: white;
+        color: #6b21a5;
+        border: 1px solid #fbc4d8;
+        box-shadow: none;
+    }
+    .pagination .current {
+        padding: 8px 16px;
+        background: #f3e8ff;
+        border-radius: 40px;
+    }
+</style>
 {% endblock %}

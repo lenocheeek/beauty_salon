@@ -33,17 +33,19 @@
 </table>
 
 {% if procedures.has_other_pages %}
-<div class="pagination" style="margin-top: 20px; display: flex; justify-content: center; gap: 10px;">
+<div class="pagination">
     {% if procedures.has_previous %}
-        <a href="?page=1" class="page-link btn">« Первая</a>
-        <a href="?page={{ procedures.previous_page_number }}" class="page-link btn">‹ Предыдущая</a>
+        <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link btn">« Первая</a>
+        <a href="?page={{ procedures.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link btn">‹ Предыдущая</a>
     {% endif %}
-    <span class="current" style="padding: 8px 16px; background: #f3e8ff; border-radius: 40px;">
+
+    <span class="current">
         Страница {{ procedures.number }} из {{ procedures.paginator.num_pages }}
     </span>
+
     {% if procedures.has_next %}
-        <a href="?page={{ procedures.next_page_number }}" class="page-link btn">Следующая ›</a>
-        <a href="?page={{ procedures.paginator.num_pages }}" class="page-link btn">Последняя »</a>
+        <a href="?page={{ procedures.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link btn">Следующая ›</a>
+        <a href="?page={{ procedures.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="page-link btn">Последняя »</a>
     {% endif %}
 </div>
 {% endif %}
