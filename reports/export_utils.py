@@ -8,6 +8,25 @@ from datetime import datetime
 import tempfile
 import os
 
+# Регистрация шрифта для PDF
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+
+# Путь к скачанному шрифту
+FONT_PATH = os.path.join(os.path.dirname(__file__), 'fonts', 'DejaVuSans.ttf')
+
+# Регистрируем шрифт с поддержкой кириллицы
+RUSSIAN_FONT = 'Helvetica'
+if os.path.exists(FONT_PATH):
+    try:
+        pdfmetrics.registerFont(TTFont('DejaVuSans', FONT_PATH))
+        RUSSIAN_FONT = 'DejaVuSans'
+        print(f"✓ Russian font loaded successfully from: {FONT_PATH}")
+    except Exception as e:
+        print(f"✗ Error loading font: {e}")
+else:
+    print(f"✗ Font not found at: {FONT_PATH}")
+
 def export_to_excel(data, filename, sheet_name="Report"):
     df = pd.DataFrame(data)
     response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -55,8 +74,8 @@ def export_revenue_to_excel(daily_data, total, start_date, end_date):
     chart = workbook.add_chart({'type': 'line'})
     chart.add_series({
         'name': 'Выручка',
-        'categories': f'=График!$A$1:$A${len(dates)}',
-        'values': f'=График!$B$1:$B${len(totals)}',
+        'categories': ['График', 0, 0, len(dates) - 1, 0],
+        'values': ['График', 0, 1, len(totals) - 1, 1],
         'line': {'color': '#d946ef', 'width': 2},
         'marker': {'type': 'circle', 'size': 6, 'fill': {'color': '#f472b6'}},
     })
@@ -105,24 +124,17 @@ def export_staff_to_excel(staff_data, start_date, end_date):
         worksheet_chart.write(i, 0, emp)
         worksheet_chart.write(i, 1, count)
     
-    # Розовые оттенки для столбцов
-    pink_colors = ['#f472b6', '#f78fc9', '#fba5d4', '#fec3e5', '#ffd9f0', '#e85ca3', '#d946ef', '#c026d3']
-    
     chart = workbook.add_chart({'type': 'column'})
-    
-    for i in range(len(employees)):
-        chart.add_series({
-            'name': employees[i],
-            'categories': [f'=График!$A${i+1}', f'=График!$A${i+1}'],
-            'values': [f'=График!$B${i+1}', f'=График!$B${i+1}'],
-            'fill': {'color': pink_colors[i % len(pink_colors)]},
-            'border': {'color': '#a21caf'},
-        })
-    
+    chart.add_series({
+        'name': 'Количество процедур',
+        'categories': ['График', 0, 0, len(employees) - 1, 0],
+        'values': ['График', 0, 1, len(counts) - 1, 1],
+        'fill': {'color': '#f472b6'},
+        'border': {'color': '#a21caf'},
+    })
     chart.set_title({'name': 'Загрузка сотрудников'})
     chart.set_x_axis({'name': 'Сотрудник'})
     chart.set_y_axis({'name': 'Количество процедур'})
-    chart.set_legend({'position': 'bottom'})
     
     worksheet_chart.insert_chart('D2', chart, {'x_scale': 2, 'y_scale': 1.5})
     
@@ -166,20 +178,12 @@ def export_services_to_excel(services_data, total_count, start_date, end_date):
         worksheet_chart.write(i, 0, service)
         worksheet_chart.write(i, 1, count)
     
-    # Розовые оттенки для секторов круговой диаграммы
-    pink_colors = ['#f472b6', '#f78fc9', '#fba5d4', '#fec3e5', '#ffd9f0', '#e85ca3', '#d946ef', '#c026d3']
-    
-    points = []
-    for i in range(len(services)):
-        points.append({'fill': {'color': pink_colors[i % len(pink_colors)]}})
-    
     chart = workbook.add_chart({'type': 'pie'})
     chart.add_series({
         'name': 'Популярность услуг',
-        'categories': f'=График!$A$1:$A${len(services)}',
-        'values': f'=График!$B$1:$B${len(counts)}',
+        'categories': ['График', 0, 0, len(services) - 1, 0],
+        'values': ['График', 0, 1, len(counts) - 1, 1],
         'data_labels': {'percentage': True, 'category': True},
-        'points': points,
     })
     chart.set_title({'name': 'Распределение услуг'})
     
@@ -232,7 +236,6 @@ def generate_bar_chart(data, x_key, y_key, title, xlabel, ylabel):
     if not values:
         return None
     
-    # Розовые оттенки для столбцов
     pink_colors = ['#f472b6', '#f78fc9', '#fba5d4', '#fec3e5', '#ffd9f0', '#e85ca3', '#d946ef', '#c026d3']
     
     plt.figure(figsize=(12, 6), facecolor='white')
@@ -268,7 +271,6 @@ def generate_pie_chart(data, key, value_key, title):
     if not values:
         return None
     
-    # Розовые оттенки для секторов круговой диаграммы
     pink_colors = ['#f472b6', '#f78fc9', '#fba5d4', '#fec3e5', '#ffd9f0', '#e85ca3', '#d946ef', '#c026d3']
     
     plt.figure(figsize=(10, 8), facecolor='white')
@@ -291,30 +293,14 @@ def generate_pie_chart(data, key, value_key, title):
     plt.close()
     return buf
 
+# ==================== PDF ФУНКЦИИ ====================
+
 def export_to_pdf_revenue(daily_data, total, start_date, end_date, chart_img=None):
     from reportlab.lib.pagesizes import A4, landscape
     from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
     from reportlab.lib import colors
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.units import inch
-    from reportlab.pdfbase import pdfmetrics
-    from reportlab.pdfbase.ttfonts import TTFont
-    from django.http import HttpResponse
-    
-    font_paths = [
-        '/System/Library/Fonts/Supplemental/Arial.ttf',
-        '/System/Library/Fonts/Supplemental/Verdana.ttf',
-    ]
-    
-    font_name = 'Helvetica'
-    for path in font_paths:
-        if os.path.exists(path):
-            try:
-                pdfmetrics.registerFont(TTFont('CustomFont', path))
-                font_name = 'CustomFont'
-                break
-            except:
-                pass
     
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename="revenue_report_{datetime.now().strftime("%Y%m%d")}.pdf"'
@@ -322,9 +308,9 @@ def export_to_pdf_revenue(daily_data, total, start_date, end_date, chart_img=Non
     doc = SimpleDocTemplate(response, pagesize=landscape(A4))
     
     styles = getSampleStyleSheet()
-    title_style = ParagraphStyle('TitleStyle', parent=styles['Title'], fontSize=16, textColor=colors.purple, fontName=font_name)
-    normal_style = ParagraphStyle('NormalStyle', parent=styles['Normal'], fontName=font_name)
-    heading2_style = ParagraphStyle('Heading2Style', parent=styles['Heading2'], fontName=font_name, textColor=colors.purple)
+    title_style = ParagraphStyle('TitleStyle', parent=styles['Title'], fontSize=16, textColor=colors.purple, fontName=RUSSIAN_FONT)
+    normal_style = ParagraphStyle('NormalStyle', parent=styles['Normal'], fontName=RUSSIAN_FONT)
+    heading2_style = ParagraphStyle('Heading2Style', parent=styles['Heading2'], fontName=RUSSIAN_FONT, textColor=colors.purple)
     
     elements = []
     
@@ -362,13 +348,168 @@ def export_to_pdf_revenue(daily_data, total, start_date, end_date, chart_img=Non
             ('BACKGROUND', (0, 0), (-1, 0), colors.pink),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-            ('FONTNAME', (0, 0), (-1, 0), font_name),
+            ('FONTNAME', (0, 0), (-1, 0), RUSSIAN_FONT),
+            ('FONTNAME', (0, 1), (-1, -1), RUSSIAN_FONT),
             ('FONTSIZE', (0, 0), (-1, 0), 10),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
             ('TOPPADDING', (0, 0), (-1, 0), 12),
             ('GRID', (0, 0), (-1, -1), 1, colors.black),
             ('FONTSIZE', (0, 1), (-1, -1), 9),
             ('ALIGN', (1, 1), (-1, -1), 'CENTER'),
+        ]))
+        elements.append(table)
+    else:
+        elements.append(Paragraph("Нет данных за выбранный период", normal_style))
+    
+    doc.build(elements)
+    
+    if temp_file and os.path.exists(temp_file):
+        os.unlink(temp_file)
+    
+    return response
+
+def export_staff_to_pdf(staff_data, start_date, end_date, chart_img=None):
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from django.http import HttpResponse
+    
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="staff_load_report_{datetime.now().strftime("%Y%m%d")}.pdf"'
+    
+    doc = SimpleDocTemplate(response, pagesize=landscape(A4))
+    
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle('TitleStyle', parent=styles['Title'], fontSize=16, textColor=colors.purple, fontName=RUSSIAN_FONT)
+    normal_style = ParagraphStyle('NormalStyle', parent=styles['Normal'], fontName=RUSSIAN_FONT)
+    
+    elements = []
+    
+    elements.append(Paragraph("Отчёт по загрузке сотрудников", title_style))
+    elements.append(Spacer(1, 0.2*inch))
+    elements.append(Paragraph(f"Период: {start_date.strftime('%d.%m.%Y')} - {end_date.strftime('%d.%m.%Y')}", normal_style))
+    elements.append(Spacer(1, 0.3*inch))
+    
+    temp_file = None
+    if chart_img:
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+            tmp.write(chart_img.getvalue())
+            temp_file = tmp.name
+        
+        img = Image(temp_file, width=6*inch, height=3.5*inch)
+        elements.append(img)
+        elements.append(Spacer(1, 0.3*inch))
+    
+    table_data = [['Сотрудник', 'Специализация', 'Кол-во процедур']]
+    total_procedures = 0
+    for item in staff_data:
+        count = item['count']
+        total_procedures += count
+        table_data.append([
+            f"{item['employee__last_name']} {item['employee__first_name']}",
+            item['employee__specialization'] or '—',
+            str(count)
+        ])
+    
+    if len(table_data) > 1:
+        table_data.append(['ИТОГО', '', str(total_procedures)])
+        
+        col_widths = [2.5*inch, 2*inch, 1.5*inch]
+        table = Table(table_data, colWidths=col_widths, repeatRows=1)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.pink),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), RUSSIAN_FONT),
+            ('FONTNAME', (0, 1), (-1, -1), RUSSIAN_FONT),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('TOPPADDING', (0, 0), (-1, 0), 12),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('ALIGN', (1, 1), (-1, -1), 'CENTER'),
+            ('BACKGROUND', (-1, -1), (-1, -1), colors.lavender),
+            ('FONTNAME', (-1, -1), (-1, -1), RUSSIAN_FONT),
+            ('FONTSIZE', (-1, -1), (-1, -1), 10),
+        ]))
+        elements.append(table)
+    else:
+        elements.append(Paragraph("Нет данных за выбранный период", normal_style))
+    
+    doc.build(elements)
+    
+    if temp_file and os.path.exists(temp_file):
+        os.unlink(temp_file)
+    
+    return response
+
+def export_services_to_pdf(services_data, total_count, start_date, end_date, chart_img=None):
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.units import inch
+    from django.http import HttpResponse
+    
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="services_popularity_report_{datetime.now().strftime("%Y%m%d")}.pdf"'
+    
+    doc = SimpleDocTemplate(response, pagesize=landscape(A4))
+    
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle('TitleStyle', parent=styles['Title'], fontSize=16, textColor=colors.purple, fontName=RUSSIAN_FONT)
+    normal_style = ParagraphStyle('NormalStyle', parent=styles['Normal'], fontName=RUSSIAN_FONT)
+    heading2_style = ParagraphStyle('Heading2Style', parent=styles['Heading2'], fontName=RUSSIAN_FONT, textColor=colors.purple)
+    
+    elements = []
+    
+    elements.append(Paragraph("Отчёт по популярности услуг", title_style))
+    elements.append(Spacer(1, 0.2*inch))
+    elements.append(Paragraph(f"Период: {start_date.strftime('%d.%m.%Y')} - {end_date.strftime('%d.%m.%Y')}", normal_style))
+    elements.append(Spacer(1, 0.1*inch))
+    elements.append(Paragraph(f"Всего процедур: {total_count}", heading2_style))
+    elements.append(Spacer(1, 0.3*inch))
+    
+    temp_file = None
+    if chart_img:
+        with tempfile.NamedTemporaryFile(suffix='.png', delete=False) as tmp:
+            tmp.write(chart_img.getvalue())
+            temp_file = tmp.name
+        
+        img = Image(temp_file, width=6*inch, height=3.5*inch)
+        elements.append(img)
+        elements.append(Spacer(1, 0.3*inch))
+    
+    table_data = [['Услуга', 'Кол-во выполнений', 'Доля']]
+    for item in services_data:
+        table_data.append([
+            item['service__name'],
+            str(item['count']),
+            f"{item['percent']}%"
+        ])
+    
+    if len(table_data) > 1:
+        table_data.append(['ИТОГО', str(total_count), '100%'])
+        
+        col_widths = [3*inch, 1.5*inch, 1.5*inch]
+        table = Table(table_data, colWidths=col_widths, repeatRows=1)
+        table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.pink),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), RUSSIAN_FONT),
+            ('FONTNAME', (0, 1), (-1, -1), RUSSIAN_FONT),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('TOPPADDING', (0, 0), (-1, 0), 12),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('ALIGN', (1, 1), (-1, -1), 'CENTER'),
+            ('BACKGROUND', (-1, -1), (-1, -1), colors.lavender),
+            ('FONTNAME', (-1, -1), (-1, -1), RUSSIAN_FONT),
+            ('FONTSIZE', (-1, -1), (-1, -1), 10),
         ]))
         elements.append(table)
     else:

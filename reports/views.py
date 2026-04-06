@@ -9,6 +9,8 @@ from .export_utils import (
     export_revenue_to_excel,
     export_staff_to_excel,
     export_services_to_excel,
+    export_staff_to_pdf,
+    export_services_to_pdf,
     generate_line_chart, 
     generate_bar_chart, 
     generate_pie_chart, 
@@ -101,36 +103,38 @@ def report_revenue(request):
     if form.is_valid() and request.GET.get('submit'):
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date']
-        start_datetime = datetime.combine(start_date, datetime.min.time())
-        end_datetime = datetime.combine(end_date, datetime.max.time())
         
-        from django.db import connection
-        cursor = connection.cursor()
-        cursor.execute("""
-            SELECT DATE(date) as day, COUNT(*) as count, SUM(price_at_moment) as total
-            FROM procedures_performedprocedure
-            WHERE date BETWEEN %s AND %s
-            GROUP BY DATE(date)
-            ORDER BY day
-        """, [start_datetime, end_datetime])
-        
-        rows = cursor.fetchall()
-        for row in rows:
-            if row[0]:
-                daily_data.append({
-                    'day': row[0],
-                    'count': row[1],
-                    'total': float(row[2]) if row[2] else 0
-                })
-        
-        total = sum(item['total'] for item in daily_data)
-        has_data = True
-        
-        if daily_data:
-            chart_img = generate_line_chart(daily_data)
-            if chart_img:
-                chart_base64 = base64.b64encode(chart_img.getvalue()).decode('utf-8')
-                chart = f"data:image/png;base64,{chart_base64}"
+        if start_date and end_date:
+            start_datetime = datetime.combine(start_date, datetime.min.time())
+            end_datetime = datetime.combine(end_date, datetime.max.time())
+            
+            from django.db import connection
+            cursor = connection.cursor()
+            cursor.execute("""
+                SELECT DATE(date) as day, COUNT(*) as count, SUM(price_at_moment) as total
+                FROM procedures_performedprocedure
+                WHERE date BETWEEN %s AND %s
+                GROUP BY DATE(date)
+                ORDER BY day
+            """, [start_datetime, end_datetime])
+            
+            rows = cursor.fetchall()
+            for row in rows:
+                if row[0]:
+                    daily_data.append({
+                        'day': row[0],
+                        'count': row[1],
+                        'total': float(row[2]) if row[2] else 0
+                    })
+            
+            total = sum(item['total'] for item in daily_data)
+            has_data = True
+            
+            if daily_data:
+                chart_img = generate_line_chart(daily_data)
+                if chart_img:
+                    chart_base64 = base64.b64encode(chart_img.getvalue()).decode('utf-8')
+                    chart = f"data:image/png;base64,{chart_base64}"
 
     return render(request, 'reports/revenue.html', {
         'form': form,
@@ -169,13 +173,44 @@ def report_staff_load(request):
             
             return export_staff_to_excel(staff_data, start_date, end_date)
 
+    if request.GET.get('export') == 'pdf':
+        start_date_str = request.GET.get('start_date')
+        end_date_str = request.GET.get('end_date')
+        if start_date_str and end_date_str:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            start_datetime = datetime.combine(start_date, datetime.min.time())
+            end_datetime = datetime.combine(end_date, datetime.max.time())
+            procedures = PerformedProcedure.objects.filter(date__range=[start_datetime, end_datetime])
+            
+            staff_data = (procedures
+                          .values('employee__last_name', 'employee__first_name', 'employee__specialization')
+                          .annotate(count=Count('id'))
+                          .order_by('-count'))
+            
+            # Генерируем график
+            chart_img = None
+            if staff_data:
+                chart_data = []
+                for item in staff_data:
+                    chart_data.append({
+                        'employee': f"{item['employee__last_name']} {item['employee__first_name']}",
+                        'count': item['count']
+                    })
+                chart_img = generate_bar_chart(chart_data, 'employee', 'count', 
+                                               'Загрузка сотрудников', 'Сотрудник', 'Количество процедур')
+            
+            return export_staff_to_pdf(staff_data, start_date, end_date, chart_img)
+
     if form.is_valid() and request.GET.get('submit'):
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date']
-        start_datetime = datetime.combine(start_date, datetime.min.time())
-        end_datetime = datetime.combine(end_date, datetime.max.time())
-        procedures = PerformedProcedure.objects.filter(date__range=[start_datetime, end_datetime])
-        has_data = True
+        
+        if start_date and end_date:
+            start_datetime = datetime.combine(start_date, datetime.min.time())
+            end_datetime = datetime.combine(end_date, datetime.max.time())
+            procedures = PerformedProcedure.objects.filter(date__range=[start_datetime, end_datetime])
+            has_data = True
 
     staff_data = (procedures
                   .values('employee__last_name', 'employee__first_name', 'employee__specialization')
@@ -213,6 +248,7 @@ def report_services_popularity(request):
     total_count = 0
     start_date = None
     end_date = None
+    category = None
     chart = None
     has_data = False
     procedures = PerformedProcedure.objects.all()
@@ -220,12 +256,16 @@ def report_services_popularity(request):
     if request.GET.get('export') == 'excel':
         start_date_str = request.GET.get('start_date')
         end_date_str = request.GET.get('end_date')
+        category_id = request.GET.get('category')
         if start_date_str and end_date_str:
             start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
             start_datetime = datetime.combine(start_date, datetime.min.time())
             end_datetime = datetime.combine(end_date, datetime.max.time())
             procedures = PerformedProcedure.objects.filter(date__range=[start_datetime, end_datetime])
+            
+            if category_id:
+                procedures = procedures.filter(service__categories__id=category_id)
             
             services_data = (procedures
                              .values('service__name')
@@ -239,12 +279,50 @@ def report_services_popularity(request):
             
             return export_services_to_excel(services_data, total_count, start_date, end_date)
 
+    if request.GET.get('export') == 'pdf':
+        start_date_str = request.GET.get('start_date')
+        end_date_str = request.GET.get('end_date')
+        category_id = request.GET.get('category')
+        if start_date_str and end_date_str:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            start_datetime = datetime.combine(start_date, datetime.min.time())
+            end_datetime = datetime.combine(end_date, datetime.max.time())
+            procedures = PerformedProcedure.objects.filter(date__range=[start_datetime, end_datetime])
+            
+            if category_id:
+                procedures = procedures.filter(service__categories__id=category_id)
+            
+            services_data = (procedures
+                             .values('service__name')
+                             .annotate(count=Count('id'))
+                             .order_by('-count'))
+            
+            total_count = sum(item['count'] for item in services_data)
+            
+            for item in services_data:
+                item['percent'] = round(item['count'] / total_count * 100, 1) if total_count > 0 else 0
+            
+            # Генерируем график
+            chart_img = None
+            if services_data:
+                chart_img = generate_pie_chart(services_data, 'service__name', 'count', 'Популярность услуг')
+            
+            return export_services_to_pdf(services_data, total_count, start_date, end_date, chart_img)
+
     if form.is_valid() and request.GET.get('submit'):
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date']
-        start_datetime = datetime.combine(start_date, datetime.min.time())
-        end_datetime = datetime.combine(end_date, datetime.max.time())
-        procedures = PerformedProcedure.objects.filter(date__range=[start_datetime, end_datetime])
+        category = form.cleaned_data['category']
+        
+        if start_date and end_date:
+            start_datetime = datetime.combine(start_date, datetime.min.time())
+            end_datetime = datetime.combine(end_date, datetime.max.time())
+            procedures = procedures.filter(date__range=[start_datetime, end_datetime])
+        
+        if category:
+            procedures = procedures.filter(service__categories=category)
+        
         has_data = True
 
     services_data = (procedures
@@ -269,6 +347,7 @@ def report_services_popularity(request):
         'total_count': total_count,
         'start_date': start_date,
         'end_date': end_date,
+        'category': category,
         'chart': chart,
         'has_data': has_data,
     })

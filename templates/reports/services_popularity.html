@@ -9,11 +9,22 @@
     <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
         <div>
             <label>С даты:</label>
-            <input type="date" name="start_date" value="{{ request.GET.start_date }}">
+            <input type="date" name="start_date" value="{{ request.GET.start_date }}" style="padding: 10px; border-radius: 40px; border: 1px solid #fbc4d8;">
         </div>
         <div>
             <label>По дату:</label>
-            <input type="date" name="end_date" value="{{ request.GET.end_date }}">
+            <input type="date" name="end_date" value="{{ request.GET.end_date }}" style="padding: 10px; border-radius: 40px; border: 1px solid #fbc4d8;">
+        </div>
+        <div>
+            <label>Категория:</label>
+            <select name="category" style="padding: 10px; border-radius: 40px; border: 1px solid #fbc4d8;">
+                <option value="">Все категории</option>
+                {% for cat in form.fields.category.queryset %}
+                    <option value="{{ cat.id }}" {% if request.GET.category == cat.id|stringformat:"s" %}selected{% endif %}>
+                        {{ cat.name }}
+                    </option>
+                {% endfor %}
+            </select>
         </div>
         <div>
             <button type="submit" name="submit" value="1">Показать</button>
@@ -21,50 +32,53 @@
         <div>
             <button type="submit" name="export" value="excel" style="background: #10b981;">📊 Excel</button>
         </div>
+        <div>
+            <button type="submit" name="export" value="pdf" style="background: #ef4444;">📄 PDF</button>
+        </div>
     </div>
 </form>
 
 {% if has_data %}
     <p><strong>Период:</strong> {{ start_date|date:"d.m.Y" }} — {{ end_date|date:"d.m.Y" }}</p>
+    {% if category %}
+        <p><strong>Категория:</strong> {{ category.name }}</p>
+    {% endif %}
     <p><strong>Всего процедур:</strong> {{ total_count }}</p>
 
-    <div style="display: flex; flex-wrap: wrap; gap: 30px;">
-        <div style="flex: 2; min-width: 300px;">
-            <h3>Детализация по услугам</h3>
-            <table class="data-table">
-                <thead>
-                    <tr><th>Услуга</th><th>Кол-во выполнений</th><th>Доля</th></tr>
-                </thead>
-                <tbody>
-                    {% for item in services_data %}
-                    <tr>
-                        <td>{{ item.service__name }}</td>
-                        <td>{{ item.count }}</td>
-                        <td>{{ item.percent }}%</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="3">Нет данных за выбранный период</td></tr>
-                    {% endfor %}
-                </tbody>
-                <tfoot style="background: #fdf2f8; font-weight: bold;">
-                    <tr>
-                        <td><strong>ИТОГО</strong></td>
-                        <td><strong>{{ total_count }}</strong></td>
-                        <td><strong>100%</strong></td>
-                    </tr>
-                </tfoot>
-            </table>
+    {% if chart %}
+        <div style="margin: 30px 0; text-align: center; background: white; padding: 20px; border-radius: 20px;">
+            <img src="{{ chart }}" style="max-width: 100%; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
         </div>
-        
-        {% if chart %}
-        <div style="flex: 3; min-width: 400px;">
-            <h3>Круговая диаграмма</h3>
-            <div style="background: white; padding: 20px; border-radius: 20px;">
-                <img src="{{ chart }}" style="max-width: 100%; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-            </div>
-        </div>
-        {% endif %}
-    </div>
+    {% endif %}
+
+    <h3>Детализация по услугам</h3>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Услуга</th>
+                <th>Кол-во выполнений</th>
+                <th>Доля</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in services_data %}
+            <tr>
+                <td>{{ item.service__name }}</div></td>
+                <td>{{ item.count }}</div></td>
+                <td>{{ item.percent }}%</div></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3">Нет данных за выбранный период</div></td></tr>
+            {% endfor %}
+        </tbody>
+        <tfoot style="background: #fdf2f8; font-weight: bold;">
+            <tr>
+                <td><strong>ИТОГО</strong></div></td>
+                <td><strong>{{ total_count }}</strong></div></td>
+                <td><strong>100%</strong></div></td>
+            </tr>
+        </tfoot>
+    </table>
 {% else %}
     <p>Выберите период и нажмите "Показать".</p>
 {% endif %}

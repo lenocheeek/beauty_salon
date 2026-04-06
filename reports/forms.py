@@ -1,4 +1,5 @@
 from django import forms
+from services.models import Category
 
 class DateRangeForm(forms.Form):
     start_date = forms.DateField(
@@ -10,4 +11,10 @@ class DateRangeForm(forms.Form):
         widget=forms.DateInput(attrs={'type': 'date'}),
         label="По дату",
         required=False
+    )
+    category = forms.ModelChoiceField(
+        queryset=Category.objects.all(),
+        label="Категория",
+        required=False,
+        empty_label="Все категории"
     )
