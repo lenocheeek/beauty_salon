@@ -7,6 +7,7 @@ from .models import Employee
 from .forms import EmployeeForm
 from appointments.models import Appointment
 from procedures.models import PerformedProcedure
+from clients.models import Client
 
 # ==================== АДМИНИСТРАТОР ====================
 
@@ -14,7 +15,7 @@ from procedures.models import PerformedProcedure
 def employee_list(request):
     employees_list = Employee.objects.all().order_by('last_name')
     
-    search_query = request.GET.get('q', '')
+    search_query = request.GET.get('search', '')
     if search_query:
         employees_list = employees_list.filter(
             models.Q(last_name__icontains=search_query) |
@@ -29,7 +30,10 @@ def employee_list(request):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return render(request, 'employees/_employees_table.html', {'employees': employees})
     
-    return render(request, 'employees/employee_list.html', {'employees': employees, 'search_query': search_query})
+    return render(request, 'employees/employee_list.html', {
+        'employees': employees,
+        'search_query': search_query,
+    })
 
 @admin_required
 def employee_add(request):
@@ -70,13 +74,41 @@ def master_dashboard(request):
         return render(request, 'employees/no_access.html', {'message': 'Ваша учётная запись не привязана к сотруднику'})
     
     employee = request.user.employee
+    
+    # Клиенты, у которых были процедуры с этим мастером
+    clients = Client.objects.filter(
+        performedprocedure__employee=employee
+    ).distinct().order_by('last_name')
+    
     appointments = Appointment.objects.filter(employee=employee, status='scheduled').order_by('date', 'time')
     procedures = PerformedProcedure.objects.filter(employee=employee).order_by('-date')[:20]
     
     return render(request, 'employees/master_dashboard.html', {
         'employee': employee,
+        'clients': clients,
         'appointments': appointments,
         'procedures': procedures,
+    })
+
+@login_required
+def master_client_detail(request, pk):
+    """Просмотр карточки клиента мастером"""
+    if not hasattr(request.user, 'employee'):
+        return render(request, 'employees/no_access.html', {'message': 'Доступ запрещён'})
+    
+    employee = request.user.employee
+    client = get_object_or_404(Client, pk=pk)
+    
+    # Проверяем, что у этого мастера были процедуры с этим клиентом
+    procedures = PerformedProcedure.objects.filter(client=client, employee=employee).order_by('-date')
+    
+    if not procedures.exists():
+        return render(request, 'employees/no_access.html', {'message': 'У вас нет доступа к этому клиенту'})
+    
+    return render(request, 'employees/master_client_detail.html', {
+        'client': client,
+        'procedures': procedures,
+        'employee': employee,
     })
 
 @login_required

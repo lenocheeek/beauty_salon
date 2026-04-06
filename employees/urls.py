@@ -10,6 +10,7 @@ urlpatterns = [
     
     # Мастер
     path('dashboard/', views.master_dashboard, name='master_dashboard'),
+    path('client/<int:pk>/', views.master_client_detail, name='master_client_detail'),
     path('appointments/', views.master_appointments, name='master_appointments'),
     path('procedures/', views.master_procedures, name='master_procedures'),
 ]

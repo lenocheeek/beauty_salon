@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Карточка клиента{% endblock %}
+
+{% block content %}
+<h2>👤 Карточка клиента</h2>
+
+<div style="background: #f9f0ff; padding: 20px; border-radius: 20px; margin-bottom: 20px;">
+    <p><strong>Фамилия:</strong> {{ client.last_name }}</p>
+    <p><strong>Имя:</strong> {{ client.first_name }}</p>
+    <p><strong>Отчество:</strong> {{ client.middle_name|default:"—" }}</p>
+    <p><strong>Телефон:</strong> {{ client.phone }}</p>
+    <p><strong>Email:</strong> {{ client.email|default:"—" }}</p>
+    <p><strong>Дата рождения:</strong> {{ client.birth_date|date:"d.m.Y"|default:"—" }}</p>
+    <p><strong>Дата регистрации:</strong> {{ client.registration_date|date:"d.m.Y H:i" }}</p>
+    <p><strong>Скидка:</strong> {{ client.discount_percentage }}%</p>
+</div>
+
+<h3>📋 История процедур (выполненные мной)</h3>
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Дата</th>
+            <th>Услуга</th>
+            <th>Стоимость</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for proc in procedures %}
+        <tr>
+            <td>{{ proc.date|date:"d.m.Y H:i" }}</div></td>
+            <td>{{ proc.service.name }}</div></td>
+            <td>{{ proc.price_at_moment }} ₽</div></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3">Нет выполненных процедур</div></td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div style="margin-top: 30px;">
+    <a href="{% url 'master_dashboard' %}" class="btn">← Назад к панели</a>
+</div>
+{% endblock %}
