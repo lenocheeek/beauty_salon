@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}GlamFlow{% endblock %}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Poppins', 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f9f0ff 0%, #ffe6f0 100%);
+            min-height: 100vh;
+            padding-bottom: 60px;
+        }
+
+        .header {
+            background: linear-gradient(95deg, #d946ef, #f472b6);
+            padding: 1.2rem 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            background: white;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .logo-text h1 {
+            color: white;
+            font-size: 1.8rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .logo-text p {
+            color: rgba(255,255,255,0.9);
+            font-size: 0.8rem;
+            margin-top: 2px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255,255,255,0.4);
+            padding: 8px 20px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255,255,255,0.35);
+            transform: scale(1.02);
+        }
+
+        .nav {
+            background: white;
+            border-radius: 60px;
+            margin: 20px auto;
+            max-width: 90%;
+            width: auto;
+            padding: 6px 12px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            border: 1px solid rgba(217,70,239,0.2);
+        }
+
+        .nav a {
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-weight: 600;
+            transition: all 0.2s;
+            background: transparent;
+            color: #6b21a5;
+            white-space: nowrap;
+        }
+
+        .nav a:hover {
+            background: #f3e8ff;
+            color: #c026d3;
+        }
+
+        @media (max-width: 600px) {
+            .nav a {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 32px;
+            padding: 32px;
+            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.1);
+            border: 1px solid rgba(249,168,212,0.3);
+        }
+
+        h2 {
+            color: #a21caf;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            font-weight: 600;
+            border-left: 5px solid #f472b6;
+            padding-left: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        th {
+            background: #fdf2f8;
+            color: #831843;
+            padding: 14px 12px;
+            font-weight: 600;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #fce7f3;
+            color: #2c3e50;
+        }
+
+        a {
+            color: #db2777;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        a:hover {
+            color: #a21caf;
+            text-decoration: underline;
+        }
+
+        button, .btn {
+            background: linear-gradient(135deg, #ec489a, #d946ef);
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        button:hover, .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(217,70,239,0.3);
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #9c6b9e;
+            font-size: 0.8rem;
+            margin-top: 30px;
+        }
+
+        input, select, textarea {
+            border: 1px solid #fbc4d8;
+            border-radius: 40px;
+            padding: 10px 16px;
+            width: 100%;
+            margin: 6px 0 12px;
+            font-family: inherit;
+            background: #fff;
+            transition: 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #d946ef;
+            box-shadow: 0 0 0 2px rgba(217,70,239,0.2);
+        }
+
+        label {
+            font-weight: 500;
+            color: #9d174d;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo-area">
+                <div class="logo-icon">💅</div>
+                <div class="logo-text">
+                    <h1>GlamFlow</h1>
+                    <p>Система учёта процедур</p>
+                </div>
+            </div>
+            {% if user.is_authenticated %}
+                <form action="{% url 'logout' %}" method="post" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-btn">🚪 Выйти</button>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}" class="logout-btn">🔐 Войти</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if user.is_authenticated %}
+    <div class="nav">
+        <!-- Администратор (полный доступ) -->
+        {% if user.is_superuser or user.groups.all.0.name == 'Администратор' %}
+            <a href="{% url 'client_list' %}">📋 Клиенты</a>
+            <a href="{% url 'employee_list' %}">👥 Сотрудники</a>
+            <a href="{% url 'service_list' %}">💅 Услуги</a>
+            <a href="{% url 'procedure_list' %}">✨ Процедуры</a>
+            <a href="{% url 'appointment_list' %}">📅 Записи</a>
+            <a href="{% url 'reports_index' %}">📊 Отчёты</a>
+        
+        <!-- Руководитель (только отчёты) -->
+        {% elif user.groups.all.0.name == 'Руководитель' %}
+            <a href="{% url 'reports_index' %}">📊 Отчёты</a>
+        
+        <!-- Мастер (только своя страница) -->
+        {% elif user.employee %}
+            <a href="{% url 'master_dashboard' %}">👤 Моя страница</a>
+        {% endif %}
+        
+        <!-- Админка для всех, у кого есть доступ (суперпользователь, администратор) -->
+        {% if user.is_superuser or user.groups.all.0.name == 'Администратор' %}
+            <a href="/admin/">⚙️ Админка</a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="container">
+        {% block content %}
+        {% endblock %}
+    </div>
+
+    <footer>
+        ✨ GlamFlow — салон красоты | 2026
+    </footer>
+</body>
+</html>

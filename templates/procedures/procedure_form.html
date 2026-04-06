@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<h2>{{ title }}</h2>
+<form method="post">
+    {% csrf_token %}
+    {% for field in form %}
+        <div style="margin-bottom: 15px;">
+            <label>{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+                <div style="color: #e11d48; font-size: 0.8rem;">{{ field.errors }}</div>
+            {% endif %}
+        </div>
+    {% endfor %}
+    <button type="submit">Сохранить</button>
+    <a href="{% url 'procedure_list' %}" style="margin-left: 15px;">Отмена</a>
+</form>
+{% endblock %}

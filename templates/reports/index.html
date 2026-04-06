@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Отчёты{% endblock %}
+
+{% block content %}
+<h2>📊 Аналитические отчёты</h2>
+<div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 30px; justify-content: center;">
+    <div style="background: #fef4f9; padding: 20px; border-radius: 20px; flex: 1; min-width: 200px; text-align: center;">
+        <h3 style="margin-bottom: 10px;">Выручка</h3>
+        <p style="color: #6c757d; margin-bottom: 15px;">Анализ доходов за период</p>
+        <a href="{% url 'report_revenue' %}" class="btn">Перейти →</a>
+    </div>
+    <div style="background: #fef4f9; padding: 20px; border-radius: 20px; flex: 1; min-width: 200px; text-align: center;">
+        <h3 style="margin-bottom: 10px;">Загрузка сотрудников</h3>
+        <p style="color: #6c757d; margin-bottom: 15px;">Количество процедур по мастерам</p>
+        <a href="{% url 'report_staff_load' %}" class="btn">Перейти →</a>
+    </div>
+    <div style="background: #fef4f9; padding: 20px; border-radius: 20px; flex: 1; min-width: 200px; text-align: center;">
+        <h3 style="margin-bottom: 10px;">Популярность услуг</h3>
+        <p style="color: #6c757d; margin-bottom: 15px;">Самые востребованные процедуры</p>
+        <a href="{% url 'report_services_popularity' %}" class="btn">Перейти →</a>
+    </div>
+</div>
+{% endblock %}

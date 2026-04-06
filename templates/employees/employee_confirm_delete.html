@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Удаление сотрудника{% endblock %}
+
+{% block content %}
+<h2>Удаление сотрудника</h2>
+<p>Вы уверены, что хотите удалить сотрудника <strong>{{ employee.last_name }} {{ employee.first_name }}</strong>?</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" style="background-color: #e11d48;">Да, удалить</button>
+    <a href="{% url 'employee_list' %}">Отмена</a>
+</form>
+{% endblock %}

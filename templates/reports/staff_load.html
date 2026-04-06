@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Загрузка сотрудников{% endblock %}
+
+{% block content %}
+<h2>👥 Загрузка сотрудников</h2>
+
+<form method="get" style="background: #f9f0ff; padding: 20px; border-radius: 20px; margin-bottom: 30px;">
+    <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;">
+        <div>
+            <label>С даты:</label>
+            <input type="date" name="start_date" value="{{ request.GET.start_date }}">
+        </div>
+        <div>
+            <label>По дату:</label>
+            <input type="date" name="end_date" value="{{ request.GET.end_date }}">
+        </div>
+        <div>
+            <button type="submit" name="submit" value="1">Показать</button>
+        </div>
+        <div>
+            <button type="submit" name="export" value="excel" style="background: #10b981;">📊 Excel</button>
+        </div>
+    </div>
+</form>
+
+{% if has_data %}
+    <p><strong>Период:</strong> {{ start_date|date:"d.m.Y" }} — {{ end_date|date:"d.m.Y" }}</p>
+
+    <div style="display: flex; flex-wrap: wrap; gap: 30px;">
+        <div style="flex: 2; min-width: 300px;">
+            <h3>Детализация по сотрудникам</h3>
+            <table class="data-table">
+                <thead>
+                    <tr><th>Сотрудник</th><th>Специализация</th><th>Кол-во процедур</th></tr>
+                </thead>
+                <tbody>
+                    {% for item in staff_data %}
+                    <tr>
+                        <td>{{ item.employee__last_name }} {{ item.employee__first_name }}</td>
+                        <td>{{ item.employee__specialization|default:"—" }}</td>
+                        <td>{{ item.count }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3">Нет данных за выбранный период</td></tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot style="background: #fdf2f8; font-weight: bold;">
+                    <tr>
+                        <td colspan="2"><strong>ИТОГО</strong></td>
+                        <td><strong>{{ staff_data|length }}</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        
+        {% if chart %}
+        <div style="flex: 3; min-width: 400px;">
+            <h3>График загрузки сотрудников</h3>
+            <div style="background: white; padding: 20px; border-radius: 20px;">
+                <img src="{{ chart }}" style="max-width: 100%; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            </div>
+        </div>
+        {% endif %}
+    </div>
+{% else %}
+    <p>Выберите период и нажмите "Показать".</p>
+{% endif %}
+
+<div style="margin-top: 30px;">
+    <a href="{% url 'reports_index' %}" class="btn">← Назад к списку отчётов</a>
+</div>
+{% endblock %}

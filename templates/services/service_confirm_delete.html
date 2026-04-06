@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Удаление услуги{% endblock %}
+
+{% block content %}
+<h2>Удаление услуги</h2>
+<p>Вы уверены, что хотите удалить услугу <strong>{{ service.name }}</strong>?</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" style="background-color: #e11d48;">Да, удалить</button>
+    <a href="{% url 'service_list' %}">Отмена</a>
+</form>
+{% endblock %}

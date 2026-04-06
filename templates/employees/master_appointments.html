@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Мои записи{% endblock %}
+
+{% block content %}
+<h2>📅 Мои записи ({{ employee.last_name }} {{ employee.first_name }})</h2>
+
+<table class="data-table">
+    <thead>
+        <tr>
+            <th>Дата</th>
+            <th>Время</th>
+            <th>Клиент</th>
+            <th>Услуга</th>
+            <th>Статус</th>
+            <th>Комментарий</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for app in appointments %}
+        <tr>
+            <td>{{ app.date|date:"d.m.Y" }}</div></td>
+            <td>{{ app.time|time:"H:i" }}</div></td>
+            <td>{{ app.client.last_name }} {{ app.client.first_name }}</div></td>
+            <td>{{ app.service.name }}</div></td>
+            <td>
+                {% if app.status == 'scheduled' %}🟡 Запланировано
+                {% elif app.status == 'completed' %}✅ Выполнено
+                {% else %}❌ Отменено{% endif %}
+            </div></td>
+            <td>{{ app.comment|default:"—" }}</div></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">Нет записей</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+<a href="{% url 'master_dashboard' %}" class="btn">← Назад</a>
+{% endblock %}

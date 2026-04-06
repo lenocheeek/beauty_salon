@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Отметить выполненным{% endblock %}
+
+{% block content %}
+<h2>Отметить запись как выполненную</h2>
+<p>Вы уверены, что хотите отметить запись <strong>{{ appointment.client }} – {{ appointment.service }}</strong> на {{ appointment.date|date:"d.m.Y" }} {{ appointment.time|time:"H:i" }} как выполненную?</p>
+<p>Будет создана запись о выполненной процедуре.</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Да, отметить выполненной</button>
+    <a href="{% url 'appointment_list' %}">Отмена</a>
+</form>
+{% endblock %}

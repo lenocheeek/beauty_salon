@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ client.last_name }} {{ client.first_name }}{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom: 2rem;">
+    <h2>{{ client.last_name }} {{ client.first_name }} {{ client.middle_name|default:"" }}</h2>
+    <p><strong>📞 Телефон:</strong> {{ client.phone }}</p>
+    <p><strong>📧 Email:</strong> {{ client.email|default:"—" }}</p>
+    <p><strong>🎂 Дата рождения:</strong> {{ client.birth_date|date:"d.m.Y"|default:"—" }}</p>
+    <p><strong>📅 Дата регистрации:</strong> {{ client.registration_date|date:"d.m.Y H:i" }}</p>
+    <p><strong>🏷️ Скидка:</strong> {{ client.discount_percentage }}%</p>
+    <a href="{% url 'client_list' %}" class="btn secondary" style="display: inline-block; margin-top: 1rem;">← Назад к списку</a>
+</div>
+
+<h3>📋 История посещений</h3>
+<table>
+    <thead>
+        <tr><th>Дата</th><th>Услуга</th><th>Сотрудник</th><th>Стоимость</th></tr>
+    </thead>
+    <tbody>
+        {% for proc in client.performedprocedure_set.all %}
+        <tr>
+            <td>{{ proc.date|date:"d.m.Y H:i" }}</td>
+            <td>{{ proc.service.name }}</td>
+            <td>{{ proc.employee.last_name }} {{ proc.employee.first_name }}</td>
+            <td>{{ proc.price_at_moment }} ₽</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" style="text-align: center;">Нет процедур</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

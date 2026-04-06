@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Удаление процедуры{% endblock %}
+
+{% block content %}
+<h2>Удаление процедуры</h2>
+<p>Вы уверены, что хотите удалить процедуру <strong>{{ procedure.client }} – {{ procedure.service }}</strong> от {{ procedure.date|date:"d.m.Y H:i" }}?</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" style="background-color: #e11d48;">Да, удалить</button>
+    <a href="{% url 'procedure_list' %}">Отмена</a>
+</form>
+{% endblock %}
