@@ -14,6 +14,7 @@ from pathlib import Path
 import os
 import dj_database_url
 import pymysql
+import dj_database_url
 
 pymysql.version_info = (2, 2, 1, "final", 0)
 pymysql.install_as_MySQLdb()
@@ -87,7 +88,7 @@ WSGI_APPLICATION = 'salon_project.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='mysql://root:@localhost:3306/salon_db',
+        default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
         conn_max_age=600
     )
 }
