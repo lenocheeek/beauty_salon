@@ -4,8 +4,21 @@
 
 {% block content %}
 <h2>{{ title }}</h2>
-<form method="post">
+
+<form method="post" id="procedureForm">
     {% csrf_token %}
+    
+    <!-- Скрытое поле для ID предварительной записи -->
+    <input type="hidden" name="appointment_id" id="appointment_id">
+    
+    <div style="margin-bottom: 15px;">
+        <label>Связать с предварительной записью</label>
+        <select id="appointment_select" style="width: 100%; padding: 10px; border-radius: 40px; border: 1px solid #fbc4d8;">
+            <option value="">---------</option>
+        </select>
+        <small style="color: #6c757d; display: block;">Выберите запись, поля заполнятся автоматически</small>
+    </div>
+    
     {% for field in form %}
         <div style="margin-bottom: 15px;">
             <label>{{ field.label }}</label>
@@ -15,7 +28,89 @@
             {% endif %}
         </div>
     {% endfor %}
+    
     <button type="submit">Сохранить</button>
     <a href="{% url 'procedure_list' %}" style="margin-left: 15px;">Отмена</a>
 </form>
+
+<script>
+    const clientSelect = document.querySelector('#id_client');
+    const employeeSelect = document.querySelector('#id_employee');
+    const serviceSelect = document.querySelector('#id_service');
+    const dateInput = document.querySelector('#id_date');
+    const priceInput = document.querySelector('#id_price_at_moment');
+    const appointmentSelect = document.querySelector('#appointment_select');
+    const appointmentIdField = document.querySelector('#appointment_id');
+    
+    // Загрузка всех запланированных записей
+    function loadAllAppointments() {
+        fetch('/appointments/get_all_scheduled/')
+            .then(response => response.json())
+            .then(data => {
+                appointmentSelect.innerHTML = '<option value="">---------</option>';
+                data.forEach(app => {
+                    const option = document.createElement('option');
+                    option.value = app.id;
+                    option.textContent = app.display_text;
+                    appointmentSelect.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Ошибка:', error));
+    }
+    
+    // Заполнение формы при выборе записи
+    function fillFormFromAppointment(appointmentId) {
+        if (appointmentId) {
+            fetch(`/appointments/get_details/?appointment_id=${appointmentId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        console.error(data.error);
+                        return;
+                    }
+                    
+                    // Заполняем поля формы
+                    clientSelect.value = data.client_id;
+                    employeeSelect.value = data.employee_id;
+                    serviceSelect.value = data.service_id;
+                    dateInput.value = data.datetime_local;
+                    priceInput.value = data.service_price;
+                    appointmentIdField.value = data.id;
+                    
+                    // Обновляем текст выбранной опции, чтобы он отображался корректно
+                    const selectedOption = appointmentSelect.querySelector(`option[value="${appointmentId}"]`);
+                    if (selectedOption) {
+                        selectedOption.selected = true;
+                    }
+                })
+                .catch(error => console.error('Ошибка:', error));
+        }
+    }
+    
+    // Событие при выборе записи
+    appointmentSelect.addEventListener('change', function() {
+        const appointmentId = this.value;
+        if (appointmentId) {
+            fillFormFromAppointment(appointmentId);
+        } else {
+            // Очищаем поля формы
+            clientSelect.value = '';
+            employeeSelect.value = '';
+            serviceSelect.value = '';
+            dateInput.value = '';
+            priceInput.value = '';
+            appointmentIdField.value = '';
+        }
+    });
+    
+    // Загружаем все записи при загрузке страницы
+    loadAllAppointments();
+    
+    // Если есть предустановленный appointment_id (при редактировании), выбираем его
+    {% if form.instance.appointment %}
+        const presetAppointmentId = {{ form.instance.appointment.id }};
+        appointmentSelect.value = presetAppointmentId;
+        fillFormFromAppointment(presetAppointmentId);
+    {% endif %}
+</script>
 {% endblock %}
