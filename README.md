@@ -21,16 +21,19 @@
 ```bash
 git clone https://github.com/lenocheeek/beauty_salon.git
 cd beauty_salon
+``` 
 
 ### 2. Создать и активировать виртуальное окружение
 ```bash
 python -m venv venv
 source venv/bin/activate      # для Mac/Linux
 venv\Scripts\activate         # для Windows
+```
 
 ### 3. Установить зависимости
 ```bash
 pip install -r requirements.txt
+```
 
 ### 4. Настроить базу данных
 По умолчанию используется SQLite (файл db.sqlite3). Для MySQL измените настройки в salon_project/settings.py.
@@ -38,7 +41,29 @@ pip install -r requirements.txt
 Применить миграции:
 ```bash
 python manage.py migrate
+```
 
 ### 5. Создать суперпользователя
 ```bash
 python manage.py createsuperuser
+```
+### 6. Запустить сервер
+```bash
+python manage.py runserver 8001
+```
+
+### 7. Открыть в браузере
+```text
+http://127.0.0.1:8001
+```
+### Основные функции
+
+- Управление клиентами, сотрудниками, услугами (CRUD)
+- Регистрация выполненных процедур (с привязкой к предварительной записи)
+- Предварительная запись клиентов
+- Аналитические отчёты:
+    - Выручка за период (линейный график)
+    - Загрузка сотрудников (столбчатая диаграмма)
+    - Популярность услуг (круговая диаграмма)
+- Экспорт отчётов в Excel и PDF
+- Динамический поиск и пагинация на всех страницах
