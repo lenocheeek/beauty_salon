@@ -39,11 +39,11 @@
         <tbody>
             {% for app in appointments %}
             <tr>
-                <td>{{ app.date|date:"d.m.Y" }}</td>
-                <td>{{ app.time|time:"H:i" }}</td>
-                <td>{{ app.client.last_name }} {{ app.client.first_name }}</td>
-                <td>{{ app.service.name }}</td>
-                <td>{{ app.employee.last_name }} {{ app.employee.first_name }}</td>
+                <td>{{ app.date|date:"d.m.Y" }}</div></td>
+                <td>{{ app.time|time:"H:i" }}</div></td>
+                <td>{{ app.client.last_name }} {{ app.client.first_name }}</div></td>
+                <td>{{ app.service.name }}</div></td>
+                <td>{{ app.employee.last_name }} {{ app.employee.first_name }}</div></td>
                 <td>
                     {% if app.status == 'scheduled' %}
                         <span style="color: #f59e0b;">🟡 Запланировано</span>
@@ -52,7 +52,7 @@
                     {% else %}
                         <span style="color: #ef4444;">❌ Отменено</span>
                     {% endif %}
-                </td>
+                </div></td>
                 {% if user.groups.all.0.name == 'Администратор' %}
                     <td>
                         <a href="{% url 'appointment_edit' app.id %}">✏️</a>
@@ -60,11 +60,11 @@
                         {% if app.status == 'scheduled' %}
                             | <a href="{% url 'appointment_complete' app.id %}" style="color: #10b981;">✅ Отметить выполненным</a>
                         {% endif %}
-                    </td>
+                    </div></td>
                 {% endif %}
             </tr>
             {% empty %}
-            <tr><td colspan="7">Нет предварительных записей</td></tr>
+            <tr><td colspan="7">Нет предварительных записей</div></td></tr>
             {% endfor %}
         </tbody>
     </table>
@@ -87,9 +87,5 @@
         {% endif %}
     </div>
     {% endif %}
-</div>
-
-<div style="margin-top: 30px;">
-    <a href="{% url 'reports_index' %}" class="btn">← Назад к отчётам</a>
 </div>
 {% endblock %}
