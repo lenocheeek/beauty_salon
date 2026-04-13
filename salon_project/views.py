@@ -9,7 +9,7 @@ def home_redirect(request):
     
     # Проверяем, состоит ли пользователь в группе "Руководитель"
     if request.user.groups.filter(name='Руководитель').exists():
-        return redirect('reports_index')
+        return redirect('chief_dashboard')
     
     # По умолчанию — администратор (список клиентов)
     return redirect('client_list')

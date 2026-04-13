@@ -23,14 +23,16 @@ def procedure_list(request):
     if start_date:
         try:
             start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
-            procedures_list = procedures_list.filter(date__date__gte=start_datetime)
+            start_datetime = datetime(start_datetime.year, start_datetime.month, start_datetime.day, 0, 0, 0)
+            procedures_list = procedures_list.filter(date__gte=start_datetime)
         except:
             pass
     
     if end_date:
         try:
             end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
-            procedures_list = procedures_list.filter(date__date__lte=end_datetime)
+            end_datetime = datetime(end_datetime.year, end_datetime.month, end_datetime.day, 23, 59, 59)
+            procedures_list = procedures_list.filter(date__lte=end_datetime)
         except:
             pass
     
@@ -77,15 +79,10 @@ def procedure_add(request):
             procedure = form.save()
             
             # Если выбрана предварительная запись, обновляем её статус
-            appointment_id = request.POST.get('appointment_id')
-            if appointment_id:
-                try:
-                    appointment = Appointment.objects.get(id=appointment_id)
-                    if appointment.status == 'scheduled':
-                        appointment.status = 'completed'
-                        appointment.save()
-                except Appointment.DoesNotExist:
-                    pass
+            appointment = form.cleaned_data.get('appointment')
+            if appointment:
+                appointment.status = 'completed'
+                appointment.save()
             
             return redirect('procedure_list')
     else:

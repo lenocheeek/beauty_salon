@@ -235,7 +235,7 @@
             <div class="logo-area">
                 <div class="logo-icon">💅</div>
                 <div class="logo-text">
-                    <h1>GlamFlow</h1>
+                    <h1>Салон красоты</h1>
                     <p>Система учёта процедур</p>
                 </div>
             </div>
@@ -264,7 +264,8 @@
         
         <!-- Руководитель (только отчёты) -->
         {% elif user.groups.all.0.name == 'Руководитель' %}
-            <a href="{% url 'reports_index' %}">Отчёты</a>
+        <a href="{% url 'chief_dashboard' %}">Главная</a>
+        <a href="{% url 'reports_index' %}">Отчёты</a>
         
         <!-- Мастер (только своя страница) -->
         {% elif user.employee %}
@@ -286,7 +287,7 @@
     </div>
 
     <footer>
-        ✨ GlamFlow — салон красоты | 2026
+        ✨ Салон красоты | 2026
     </footer>
 </body>
 </html>

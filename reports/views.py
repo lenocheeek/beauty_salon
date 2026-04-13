@@ -17,12 +17,57 @@ from .export_utils import (
     generate_pie_chart, 
     export_to_pdf_revenue
 )
-from datetime import datetime
+from datetime import datetime, timedelta
 import base64
+from django.utils import timezone
+from employees.models import Employee
+from services.models import Service
 
 @chief_required
 def reports_index(request):
     return render(request, 'reports/index.html')
+
+@chief_required
+def chief_dashboard(request):
+    today = timezone.now().date()
+    start_of_week = today - timedelta(days=today.weekday())
+    
+    # Преобразуем даты в datetime для корректного сравнения
+    today_start = datetime(today.year, today.month, today.day, 0, 0, 0)
+    week_start = datetime(start_of_week.year, start_of_week.month, start_of_week.day, 0, 0, 0)
+    thirty_days_ago = today - timedelta(days=30)
+    thirty_days_ago_start = datetime(thirty_days_ago.year, thirty_days_ago.month, thirty_days_ago.day, 0, 0, 0)
+    
+    # Выручка сегодня
+    revenue_today = PerformedProcedure.objects.filter(date__gte=today_start).aggregate(total=Sum('price_at_moment'))['total'] or 0
+    
+    # Выручка за неделю
+    revenue_week = PerformedProcedure.objects.filter(date__gte=week_start).aggregate(total=Sum('price_at_moment'))['total'] or 0
+    
+    # Выручка за последние 30 дней
+    revenue_last_30 = PerformedProcedure.objects.filter(date__gte=thirty_days_ago_start).aggregate(total=Sum('price_at_moment'))['total'] or 0
+    
+    # Количество процедур за последние 30 дней
+    procedures_count_last_30 = PerformedProcedure.objects.filter(date__gte=thirty_days_ago_start).count()
+    
+    # Количество сотрудников
+    employees_count = Employee.objects.count()
+    
+    # Количество активных услуг
+    services_count = Service.objects.filter(is_active=True).count()
+    
+    # Последние 5 выполненных процедур
+    latest_procedures = PerformedProcedure.objects.select_related('client', 'employee', 'service').order_by('-date')[:5]
+    
+    return render(request, 'reports/chief_dashboard.html', {
+        'revenue_today': revenue_today,
+        'revenue_week': revenue_week,
+        'revenue_last_30': revenue_last_30,
+        'procedures_count_last_30': procedures_count_last_30,
+        'employees_count': employees_count,
+        'services_count': services_count,
+        'latest_procedures': latest_procedures,
+    })
 
 @chief_required
 def report_revenue(request):
@@ -34,6 +79,7 @@ def report_revenue(request):
     chart = None
     has_data = False
 
+    # Экспорт в Excel
     if request.GET.get('export') == 'excel':
         start_date_str = request.GET.get('start_date')
         end_date_str = request.GET.get('end_date')
@@ -65,6 +111,7 @@ def report_revenue(request):
             total = sum(item['total'] for item in daily_data)
             return export_revenue_to_excel(daily_data, total, start_date, end_date)
 
+    # Экспорт в PDF
     if request.GET.get('export') == 'pdf':
         start_date_str = request.GET.get('start_date')
         end_date_str = request.GET.get('end_date')
@@ -101,6 +148,7 @@ def report_revenue(request):
             else:
                 return export_to_pdf_revenue([], 0, start_date, end_date, None)
 
+    # Обычный показ страницы
     if form.is_valid() and request.GET.get('submit'):
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date']
@@ -137,14 +185,9 @@ def report_revenue(request):
                     chart_base64 = base64.b64encode(chart_img.getvalue()).decode('utf-8')
                     chart = f"data:image/png;base64,{chart_base64}"
 
-    # Пагинация для daily_data
-    paginator = Paginator(daily_data, 15)  # 15 записей на страницу
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
     return render(request, 'reports/revenue.html', {
         'form': form,
-        'daily_data': page_obj,
+        'daily_data': daily_data,
         'total': total,
         'start_date': start_date,
         'end_date': end_date,
@@ -162,6 +205,7 @@ def report_staff_load(request):
     has_data = False
     procedures = PerformedProcedure.objects.all()
 
+    # Экспорт в Excel
     if request.GET.get('export') == 'excel':
         start_date_str = request.GET.get('start_date')
         end_date_str = request.GET.get('end_date')
@@ -179,6 +223,7 @@ def report_staff_load(request):
             
             return export_staff_to_excel(staff_data, start_date, end_date)
 
+    # Экспорт в PDF
     if request.GET.get('export') == 'pdf':
         start_date_str = request.GET.get('start_date')
         end_date_str = request.GET.get('end_date')
@@ -207,6 +252,7 @@ def report_staff_load(request):
             
             return export_staff_to_pdf(staff_data, start_date, end_date, chart_img)
 
+    # Обычный показ страницы
     if form.is_valid() and request.GET.get('submit'):
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date']
@@ -237,14 +283,9 @@ def report_staff_load(request):
                 chart_base64 = base64.b64encode(chart_img.getvalue()).decode('utf-8')
                 chart = f"data:image/png;base64,{chart_base64}"
 
-    # Пагинация для staff_data
-    paginator = Paginator(staff_data, 15)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
     return render(request, 'reports/staff_load.html', {
         'form': form,
-        'staff_data': page_obj,
+        'staff_data': staff_data,
         'start_date': start_date,
         'end_date': end_date,
         'chart': chart,
@@ -263,6 +304,7 @@ def report_services_popularity(request):
     has_data = False
     procedures = PerformedProcedure.objects.all()
 
+    # Экспорт в Excel
     if request.GET.get('export') == 'excel':
         start_date_str = request.GET.get('start_date')
         end_date_str = request.GET.get('end_date')
@@ -289,6 +331,7 @@ def report_services_popularity(request):
             
             return export_services_to_excel(services_data, total_count, start_date, end_date)
 
+    # Экспорт в PDF
     if request.GET.get('export') == 'pdf':
         start_date_str = request.GET.get('start_date')
         end_date_str = request.GET.get('end_date')
@@ -319,6 +362,7 @@ def report_services_popularity(request):
             
             return export_services_to_pdf(services_data, total_count, start_date, end_date, chart_img)
 
+    # Обычный показ страницы
     if form.is_valid() and request.GET.get('submit'):
         start_date = form.cleaned_data['start_date']
         end_date = form.cleaned_data['end_date']
@@ -350,14 +394,9 @@ def report_services_popularity(request):
             chart_base64 = base64.b64encode(chart_img.getvalue()).decode('utf-8')
             chart = f"data:image/png;base64,{chart_base64}"
 
-    # Пагинация для services_data
-    paginator = Paginator(services_data, 15)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
     return render(request, 'reports/services_popularity.html', {
         'form': form,
-        'services_data': page_obj,
+        'services_data': services_data,
         'total_count': total_count,
         'start_date': start_date,
         'end_date': end_date,
