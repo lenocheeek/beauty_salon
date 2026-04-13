@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Мои выходные{% endblock %}
+
+{% block content %}
+<h2>📅 Мои выходные дни</h2>
+<p><strong>Сотрудник:</strong> {{ employee.last_name }} {{ employee.first_name }}</p>
+
+<div style="display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap;">
+    <a href="{% url 'add_day_off' %}" class="btn" style="background: #d946ef; color: white; text-decoration: none; display: inline-block; padding: 10px 24px; border-radius: 40px; font-weight: 600;">➕ Добавить выходной</a>
+    <a href="{% url 'master_dashboard' %}" class="btn" style="background: #6c757d; color: white; text-decoration: none; display: inline-block; padding: 10px 24px; border-radius: 40px; font-weight: 600;">← Назад</a>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div style="padding: 10px; background: #d4edda; color: #155724; border-radius: 10px; margin-bottom: 15px;">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+{% if days_off %}
+    <table class="data-table" style="width: 100%; border-collapse: collapse; background: white; border-radius: 20px; overflow: hidden;">
+        <thead>
+            <tr style="background: #fdf2f8; color: #831843;">
+                <th style="padding: 14px 12px; text-align: left;">Дата</th>
+                <th style="padding: 14px 12px; text-align: left;">Причина</th>
+                <th style="padding: 14px 12px; text-align: left;">Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for day in days_off %}
+            <tr>
+                <td style="padding: 12px; border-bottom: 1px solid #fce7f3;">{{ day.date|date:"d.m.Y" }}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #fce7f3;">{{ day.reason|default:"—" }}</td>
+                <td style="padding: 12px; border-bottom: 1px solid #fce7f3;">
+                    <a href="{% url 'delete_day_off' day.id %}" style="color: #e11d48; text-decoration: none;">🗑️ Удалить</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <div style="background: #f9f0ff; padding: 20px; border-radius: 20px; text-align: center;">
+        <p style="margin: 0; color: #6c757d;">У вас нет выходных дней.</p>
+    </div>
+{% endif %}
+{% endblock %}

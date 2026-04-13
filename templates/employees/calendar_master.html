@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Мой календарь выходных{% endblock %}
+
+{% block content %}
+<h2>📅 Мой календарь выходных</h2>
+<p>Нажмите на любой день, чтобы отметить его как выходной (или снять отметку).</p>
+
+<!-- Навигация по месяцам -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+    <a href="?year={{ prev_month.year }}&month={{ prev_month.month }}" class="btn" style="background: #6c757d;">◀ Предыдущий месяц</a>
+    <h3 style="margin: 0; color: #a21caf;">{{ month_name }} {{ year }}</h3>
+    <a href="?year={{ next_month.year }}&month={{ next_month.month }}" class="btn" style="background: #6c757d;">Следующий месяц ▶</a>
+</div>
+
+<div style="overflow-x: auto; background: white; border-radius: 24px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+    <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; min-width: 600px;">
+        <div style="padding: 12px; text-align: center; font-weight: bold; background: #fdf2f8; border-radius: 12px;">ПН</div>
+        <div style="padding: 12px; text-align: center; font-weight: bold; background: #fdf2f8; border-radius: 12px;">ВТ</div>
+        <div style="padding: 12px; text-align: center; font-weight: bold; background: #fdf2f8; border-radius: 12px;">СР</div>
+        <div style="padding: 12px; text-align: center; font-weight: bold; background: #fdf2f8; border-radius: 12px;">ЧТ</div>
+        <div style="padding: 12px; text-align: center; font-weight: bold; background: #fdf2f8; border-radius: 12px;">ПТ</div>
+        <div style="padding: 12px; text-align: center; font-weight: bold; background: #fdf2f8; border-radius: 12px;">СБ</div>
+        <div style="padding: 12px; text-align: center; font-weight: bold; background: #fdf2f8; border-radius: 12px;">ВС</div>
+        
+        {% for day in calendar_days %}
+            {% if day.empty %}
+                <div style="background: #f9f0ff; border-radius: 12px; padding: 12px; text-align: center; opacity: 0.5;"></div>
+            {% else %}
+                <div class="calendar-day {% if day.is_day_off %}day-off{% else %}day-work{% endif %}" 
+                     data-date="{{ day.date }}"
+                     style="background: {% if day.is_day_off %}#fee2e2{% else %}white{% endif %}; border: 1px solid #fce7f3; border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                    <div style="font-weight: bold;">{{ day.day }}</div>
+                    <div style="font-size: 20px; margin-top: 5px;">
+                        {% if day.is_day_off %}❌{% else %}✅{% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<div style="margin-top: 20px; display: flex; gap: 20px; justify-content: center;">
+    <div><span style="display: inline-block; width: 20px; height: 20px; background: white; border: 1px solid #fce7f3; border-radius: 4px;"></span> — Рабочий день</div>
+    <div><span style="display: inline-block; width: 20px; height: 20px; background: #fee2e2; border-radius: 4px;"></span> — Выходной</div>
+</div>
+
+<div style="margin-top: 30px;">
+    <a href="{% url 'master_dashboard' %}" class="btn">← Назад к панели</a>
+</div>
+
+<script>
+    document.querySelectorAll('.calendar-day').forEach(cell => {
+        cell.addEventListener('click', function() {
+            const date = this.dataset.date;
+            if (!date) return;
+            
+            fetch('/appointments/toggle_day_off/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({date: date})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'added') {
+                    this.classList.add('day-off');
+                    this.style.background = '#fee2e2';
+                    this.querySelector('div:last-child').innerHTML = '❌';
+                } else if (data.status === 'removed') {
+                    this.classList.remove('day-off');
+                    this.style.background = 'white';
+                    this.querySelector('div:last-child').innerHTML = '✅';
+                }
+            });
+        });
+    });
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+
+<style>
+    .calendar-day:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .day-off {
+        background: #fee2e2 !important;
+    }
+    .day-work {
+        background: white !important;
+    }
+</style>
+{% endblock %}

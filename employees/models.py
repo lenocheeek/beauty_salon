@@ -15,3 +15,17 @@ class Employee(models.Model):
     class Meta:
         verbose_name = "Сотрудник"
         verbose_name_plural = "Сотрудники"
+
+
+class DayOff(models.Model):
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='days_off', verbose_name="Сотрудник")
+    date = models.DateField(verbose_name="Дата выходного")
+    reason = models.CharField(max_length=200, blank=True, null=True, verbose_name="Причина")
+
+    class Meta:
+        unique_together = ('employee', 'date')
+        verbose_name = "Выходной день"
+        verbose_name_plural = "Выходные дни"
+
+    def __str__(self):
+        return f"{self.employee} - {self.date}"

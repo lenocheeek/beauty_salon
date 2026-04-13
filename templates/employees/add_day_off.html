@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Добавить выходной{% endblock %}
+
+{% block content %}
+<h2>➕ Добавить выходной день</h2>
+<p><strong>Сотрудник:</strong> {{ employee.last_name }} {{ employee.first_name }}</p>
+
+<form method="post">
+    {% csrf_token %}
+    {% for field in form %}
+        <div style="margin-bottom: 15px;">
+            <label>{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+                <div style="color: #e11d48; font-size: 0.8rem;">{{ field.errors }}</div>
+            {% endif %}
+        </div>
+    {% endfor %}
+    <button type="submit" class="btn">Сохранить</button>
+    <a href="{% url 'my_days_off' %}" class="btn" style="background: #6c757d;">Отмена</a>
+</form>
+{% endblock %}

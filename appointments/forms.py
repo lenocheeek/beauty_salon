@@ -1,8 +1,7 @@
 from django import forms
 from .models import Appointment
-from clients.models import Client
-from employees.models import Employee
 from services.models import Service
+from employees.models import DayOff
 
 class AppointmentForm(forms.ModelForm):
     class Meta:
@@ -16,5 +15,15 @@ class AppointmentForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Показываем только активные услуги
         self.fields['service'].queryset = Service.objects.filter(is_active=True)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        employee = cleaned_data.get('employee')
+        date = cleaned_data.get('date')
+
+        if employee and date:
+            if DayOff.objects.filter(employee=employee, date=date).exists():
+                raise forms.ValidationError(f"Сотрудник {employee} не работает в выбранную дату (выходной день).")
+
+        return cleaned_data

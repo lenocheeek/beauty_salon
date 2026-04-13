@@ -254,25 +254,28 @@
     <div class="nav">
         <!-- Администратор (полный доступ) -->
         {% if user.is_superuser or user.groups.all.0.name == 'Администратор' %}
-            <a href="{% url 'client_list' %}">📋 Клиенты</a>
-            <a href="{% url 'employee_list' %}">👥 Сотрудники</a>
-            <a href="{% url 'service_list' %}">💅 Услуги</a>
-            <a href="{% url 'procedure_list' %}">✨ Процедуры</a>
-            <a href="{% url 'appointment_list' %}">📅 Записи</a>
-            <a href="{% url 'reports_index' %}">📊 Отчёты</a>
+            <a href="{% url 'client_list' %}">Клиенты</a>
+            <a href="{% url 'employee_list' %}">Сотрудники</a>
+            <a href="{% url 'calendar' %}">Календарь</a>
+            <a href="{% url 'service_list' %}">Услуги</a>
+            <a href="{% url 'procedure_list' %}">Процедуры</a>
+            <a href="{% url 'appointment_list' %}">Записи</a>
+            <a href="{% url 'reports_index' %}">Отчёты</a>
         
         <!-- Руководитель (только отчёты) -->
         {% elif user.groups.all.0.name == 'Руководитель' %}
-            <a href="{% url 'reports_index' %}">📊 Отчёты</a>
+            <a href="{% url 'reports_index' %}">Отчёты</a>
         
         <!-- Мастер (только своя страница) -->
         {% elif user.employee %}
-            <a href="{% url 'master_dashboard' %}">👤 Моя страница</a>
+            <a href="{% url 'master_dashboard' %}">Моя страница</a>
+            <a href="{% url 'my_days_off' %}">Мои выходные</a>
+            <a href="{% url 'master_calendar' %}"> Календарь выходных</a>
         {% endif %}
         
         <!-- Админка для всех, у кого есть доступ (суперпользователь, администратор) -->
         {% if user.is_superuser or user.groups.all.0.name == 'Администратор' %}
-            <a href="/admin/">⚙️ Админка</a>
+            <a href="/admin/">Админка</a>
         {% endif %}
     </div>
     {% endif %}

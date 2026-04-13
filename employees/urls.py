@@ -13,4 +13,12 @@ urlpatterns = [
     path('client/<int:pk>/', views.master_client_detail, name='master_client_detail'),
     path('appointments/', views.master_appointments, name='master_appointments'),
     path('procedures/', views.master_procedures, name='master_procedures'),
+    
+    # Выходные дни мастера
+    path('days-off/', views.my_days_off, name='my_days_off'),
+    path('days-off/add/', views.add_day_off, name='add_day_off'),
+    path('days-off/<int:pk>/delete/', views.delete_day_off, name='delete_day_off'),
+    
+    # Календарь мастера (с кликами)
+    path('calendar/', views.master_calendar, name='master_calendar'),
 ]

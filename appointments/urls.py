@@ -7,6 +7,9 @@ urlpatterns = [
     path('<int:pk>/edit/', views.appointment_edit, name='appointment_edit'),
     path('<int:pk>/delete/', views.appointment_delete, name='appointment_delete'),
     path('<int:pk>/complete/', views.appointment_complete, name='appointment_complete'),
-    path('get_all_scheduled/', views.get_all_scheduled_appointments, name='get_all_scheduled_appointments'),
+    path('get_by_client/', views.get_appointments_by_client, name='get_appointments_by_client'),
     path('get_details/', views.get_appointment_details, name='get_appointment_details'),
+    path('calendar/', views.calendar_view, name='calendar'),
+    path('toggle_day_off/', views.toggle_day_off, name='toggle_day_off'),
+    path('add/', views.appointment_add, name='appointment_add'),
 ]

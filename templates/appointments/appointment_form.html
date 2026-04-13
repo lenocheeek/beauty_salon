@@ -1,21 +1,212 @@
 {% extends 'base.html' %}
+{% load calendar_filters %}
 
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
 <h2>{{ title }}</h2>
-<form method="post">
+
+{% if form.non_field_errors %}
+    <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 20px; margin-bottom: 20px;">
+        {% for error in form.non_field_errors %}
+            <p style="margin: 0;">{{ error }}</p>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<form method="post" id="appointmentForm">
     {% csrf_token %}
-    {% for field in form %}
-        <div style="margin-bottom: 15px;">
-            <label>{{ field.label }}</label>
-            {{ field }}
-            {% if field.errors %}
-                <div style="color: #e11d48; font-size: 0.8rem;">{{ field.errors }}</div>
+    
+    <!-- Скрытые поля для выбранных сотрудника и даты -->
+    <input type="hidden" name="employee" id="id_employee_hidden">
+    <input type="hidden" name="date" id="id_date_hidden">
+    
+    <!-- Поля формы (кроме employee и date, которые скрыты) -->
+    <div style="margin-bottom: 15px;">
+        <label>{{ form.client.label }}</label>
+        {{ form.client }}
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+        <label>{{ form.service.label }}</label>
+        {{ form.service }}
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+        <label>{{ form.time.label }}</label>
+        {{ form.time }}
+    </div>
+    
+    <div style="margin-bottom: 15px;">
+        <label>{{ form.comment.label }}</label>
+        {{ form.comment }}
+    </div>
+    
+    <!-- Календарь выбора сотрудника и даты -->
+    <div style="margin-bottom: 25px;">
+        <label>Выберите сотрудника и дату:</label>
+        
+        <!-- Навигация по месяцам -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin: 15px 0;">
+            <a href="?year={{ prev_month.year }}&month={{ prev_month.month }}" class="btn" style="background: #6c757d; padding: 5px 15px;">◀</a>
+            <strong>{{ month_name }} {{ year }}</strong>
+            <a href="?year={{ next_month.year }}&month={{ next_month.month }}" class="btn" style="background: #6c757d; padding: 5px 15px;">▶</a>
+        </div>
+        
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 16px; overflow: hidden;">
+                <thead>
+                    <tr style="background: #fdf2f8;">
+                        <th style="padding: 10px; text-align: left;">Сотрудник</th>
+                        {% for day in month_days %}
+                            <th style="padding: 10px; text-align: center; min-width: 45px;">{{ day }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in employees %}
+                        <tr style="border-bottom: 1px solid #fce7f3;">
+                            <td style="padding: 10px; font-weight: 500;">
+                                {{ employee.last_name }} {{ employee.first_name }}
+                                <input type="hidden" class="employee-id" value="{{ employee.id }}">
+                            </td>
+                            {% for day in month_days %}
+                                {% with day_off_list=days_off_dict|get_item:employee.id %}
+                                    <td style="padding: 5px; text-align: center;">
+                                        <div class="calendar-cell 
+                                            {% if day in day_off_list %}day-off{% else %}day-work{% endif %}" 
+                                             data-employee-id="{{ employee.id }}"
+                                             data-employee-name="{{ employee.last_name }} {{ employee.first_name }}"
+                                             data-date-year="{{ year }}"
+                                             data-date-month="{{ month }}"
+                                             data-date-day="{{ day }}"
+                                             {% if day in day_off_list %}data-disabled="true"{% endif %}>
+                                            {% if day in day_off_list %}
+                                                ❌
+                                            {% else %}
+                                                ✅
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                {% endwith %}
+                            {% endfor %}
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="{{ month_days|length|add:1 }}" style="padding: 40px; text-align: center;">
+                                Нет сотрудников
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div style="margin-top: 10px; display: flex; gap: 15px; justify-content: center;">
+            <div><span style="display: inline-block; width: 20px; height: 20px; background: #e8f5e9; border-radius: 4px;"></span> — Рабочий день</div>
+            <div><span style="display: inline-block; width: 20px; height: 20px; background: #fee2e2; border-radius: 4px;"></span> — Выходной</div>
+        </div>
+        <div id="selected_info" style="margin-top: 10px; color: #6c757d; font-size: 14px;">
+            {% if selected_employee_id and selected_date %}
+                ✅ Выбрано: сотрудник ID {{ selected_employee_id }}, дата {{ selected_date }}
+            {% else %}
+                Выберите сотрудника и дату (нажмите на зелёную ячейку)
             {% endif %}
         </div>
-    {% endfor %}
+    </div>
+    
     <button type="submit">Сохранить</button>
     <a href="{% url 'appointment_list' %}" style="margin-left: 15px;">Отмена</a>
 </form>
+
+<script>
+    // Функция для обновления информации о выборе
+    function updateSelectedInfo(employeeId, employeeName, dateStr) {
+        const infoDiv = document.getElementById('selected_info');
+        infoDiv.innerHTML = `✅ Выбрано: ${employeeName}, ${dateStr}`;
+        infoDiv.style.color = '#2e7d32';
+        infoDiv.style.fontWeight = 'bold';
+    }
+    
+    // Обработчик клика по ячейке календаря
+    document.querySelectorAll('.calendar-cell').forEach(cell => {
+        cell.addEventListener('click', function() {
+            // Если ячейка выходного дня — не выбираем
+            if (this.dataset.disabled === 'true') {
+                alert('Этот сотрудник не работает в выбранный день (выходной)');
+                return;
+            }
+            
+            const employeeId = this.dataset.employeeId;
+            const employeeName = this.dataset.employeeName;
+            const year = this.dataset.dateYear;
+            const month = this.dataset.dateMonth;
+            const day = this.dataset.dateDay;
+            
+            // Формируем дату в формате YYYY-MM-DD
+            const dateStr = `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+            const displayDate = `${day}.${month}.${year}`;
+            
+            // Заполняем скрытые поля формы
+            document.getElementById('id_employee_hidden').value = employeeId;
+            document.getElementById('id_date_hidden').value = dateStr;
+            
+            // Обновляем информацию о выборе
+            updateSelectedInfo(employeeId, employeeName, displayDate);
+            
+            // Убираем выделение со всех ячеек
+            document.querySelectorAll('.calendar-cell').forEach(c => {
+                c.style.border = 'none';
+                c.style.boxShadow = 'none';
+            });
+            // Выделяем выбранную ячейку
+            this.style.border = '2px solid #d946ef';
+            this.style.boxShadow = '0 0 5px rgba(217,70,239,0.5)';
+        });
+    });
+    
+    // Если есть предустановленные значения (при редактировании), подсвечиваем нужную ячейку
+    {% if selected_employee_id and selected_date %}
+        document.querySelectorAll('.calendar-cell').forEach(cell => {
+            const cellEmployeeId = cell.dataset.employeeId;
+            const cellYear = cell.dataset.dateYear;
+            const cellMonth = cell.dataset.dateMonth;
+            const cellDay = cell.dataset.dateDay;
+            
+            if (cellEmployeeId == {{ selected_employee_id }} && 
+                cellYear == {{ selected_date|slice:":4" }} && 
+                cellMonth == {{ selected_date|slice:"5:7" }} && 
+                cellDay == {{ selected_date|slice:"8:10" }}) {
+                cell.style.border = '2px solid #d946ef';
+                cell.style.boxShadow = '0 0 5px rgba(217,70,239,0.5)';
+                document.getElementById('id_employee_hidden').value = {{ selected_employee_id }};
+                document.getElementById('id_date_hidden').value = '{{ selected_date }}';
+            }
+        });
+    {% endif %}
+</script>
+
+<style>
+    .calendar-cell {
+        padding: 8px;
+        text-align: center;
+        cursor: pointer;
+        border-radius: 12px;
+        transition: all 0.2s;
+        font-size: 16px;
+    }
+    .calendar-cell:hover {
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .day-work {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+    .day-off {
+        background: #fee2e2;
+        color: #e11d48;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+</style>
 {% endblock %}

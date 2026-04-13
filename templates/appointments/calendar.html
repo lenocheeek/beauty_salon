@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load calendar_filters %}
+
+{% block title %}Календарь занятости{% endblock %}
+
+{% block content %}
+<h2>📅 Календарь занятости сотрудников</h2>
+
+<!-- Навигация по месяцам -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+    <a href="?year={{ prev_month.year }}&month={{ prev_month.month }}" class="btn" style="background: #6c757d;">◀ Предыдущий месяц</a>
+    <h3 style="margin: 0; color: #a21caf;">{{ month_name }} {{ year }}</h3>
+    <a href="?year={{ next_month.year }}&month={{ next_month.month }}" class="btn" style="background: #6c757d;">Следующий месяц ▶</a>
+</div>
+
+<div style="overflow-x: auto; background: white; border-radius: 24px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+    <table style="width: 100%; border-collapse: collapse; min-width: 600px;">
+        <thead>
+            <tr style="background: #fdf2f8; border-radius: 16px;">
+                <th style="padding: 15px; text-align: left; border-radius: 16px 0 0 0;">Сотрудник</th>
+                {% for day in month_days %}
+                    <th style="padding: 15px; text-align: center; min-width: 50px;">{{ day }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for employee in employees %}
+                <tr style="border-bottom: 1px solid #fce7f3;">
+                    <td style="padding: 12px; font-weight: 500; background: #fff;">
+                        {{ employee.last_name }} {{ employee.first_name }}
+                    </td>
+                    {% for day in month_days %}
+                        <td style="padding: 8px; text-align: center;">
+                            {% with day_off_list=days_off_dict|get_item:employee.id %}
+                                {% if day in day_off_list %}
+                                    <div style="background: #fee2e2; border-radius: 12px; padding: 8px; color: #e11d48; font-weight: bold;">
+                                        ❌
+                                    </div>
+                                {% else %}
+                                    <div style="background: #e8f5e9; border-radius: 12px; padding: 8px; color: #2e7d32; font-weight: bold;">
+                                        ✅
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="{{ month_days|length|add:1 }}" style="padding: 40px; text-align: center;">
+                        Нет сотрудников
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div style="margin-top: 20px; display: flex; gap: 20px; justify-content: center;">
+    <div><span style="display: inline-block; width: 20px; height: 20px; background: #e8f5e9; border-radius: 4px;"></span> — Рабочий день</div>
+    <div><span style="display: inline-block; width: 20px; height: 20px; background: #fee2e2; border-radius: 4px;"></span> — Выходной</div>
+</div>
+
+<div style="margin-top: 30px;">
+    <a href="{% url 'appointment_list' %}" class="btn">← Назад к записям</a>
+</div>
+{% endblock %}

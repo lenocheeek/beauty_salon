@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Удалить выходной{% endblock %}
+
+{% block content %}
+<h2>🗑️ Удалить выходной день</h2>
+<p>Вы уверены, что хотите удалить выходной день <strong>{{ day_off.date|date:"d.m.Y" }}</strong>?</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" style="background-color: #e11d48; border: none; padding: 10px 24px; border-radius: 40px; color: white; font-weight: 600; cursor: pointer;">Да, удалить</button>
+    <a href="{% url 'my_days_off' %}" style="margin-left: 15px;">Отмена</a>
+</form>
+{% endblock %}
