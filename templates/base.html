@@ -233,7 +233,7 @@
     <div class="header">
         <div class="header-content">
             <div class="logo-area">
-                <div class="logo-icon">💅</div>
+                <div class="logo-icon">🧚🏻‍♀️</div>
                 <div class="logo-text">
                     <h1>Салон красоты</h1>
                     <p>Система учёта процедур</p>
@@ -274,10 +274,6 @@
             <a href="{% url 'master_calendar' %}"> Календарь выходных</a>
         {% endif %}
         
-        <!-- Админка для всех, у кого есть доступ (суперпользователь, администратор) -->
-        {% if user.is_superuser or user.groups.all.0.name == 'Администратор' %}
-            <a href="/admin/">Админка</a>
-        {% endif %}
     </div>
     {% endif %}
 

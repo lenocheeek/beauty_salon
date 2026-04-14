@@ -8,7 +8,7 @@
 
 <div style="display: flex; gap: 20px; flex-wrap: wrap; margin: 30px 0;">
     <div style="background: #fef4f9; padding: 20px; border-radius: 20px; flex: 1;">
-        <h3>👥 Мои клиенты</h3>
+        <h3>Мои клиенты</h3>
         <p style="font-size: 32px; color: #db2777;">{{ clients.count }}</p>
         <details style="margin-top: 10px;">
             <summary style="cursor: pointer; color: #db2777;">Показать список</summary>
@@ -26,18 +26,18 @@
         </details>
     </div>
     <div style="background: #fef4f9; padding: 20px; border-radius: 20px; flex: 1;">
-        <h3>📅 Предварительные записи</h3>
+        <h3>Предварительные записи</h3>
         <p style="font-size: 32px; color: #db2777;">{{ appointments.count }}</p>
         <a href="{% url 'master_appointments' %}">Посмотреть все →</a>
     </div>
     <div style="background: #fef4f9; padding: 20px; border-radius: 20px; flex: 1;">
-        <h3>✨ Выполненные процедуры</h3>
+        <h3>Выполненные процедуры</h3>
         <p style="font-size: 32px; color: #db2777;">{{ procedures.count }}</p>
         <a href="{% url 'master_procedures' %}">Посмотреть все →</a>
     </div>
 </div>
 
-<h3>📋 Ближайшие записи</h3>
+<h3>Ближайшие записи</h3>
 {% if appointments %}
     <table class="data-table">
         <thead>

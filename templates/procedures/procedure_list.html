@@ -4,7 +4,7 @@
 
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-    <h2>✨ Выполненные процедуры</h2>
+    <h2>Выполненные процедуры</h2>
     {% if user.groups.all.0.name == 'Администратор' %}
         <a href="{% url 'procedure_add' %}" class="btn">+ Новая процедура</a>
     {% endif %}

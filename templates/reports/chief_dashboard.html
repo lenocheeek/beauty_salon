@@ -3,7 +3,7 @@
 {% block title %}Панель управления{% endblock %}
 
 {% block content %}
-<h2>📊 Панель управления</h2>
+<h2>Панель управления</h2>
 <p style="margin-bottom: 30px; color: #6c757d;">Добро пожаловать, {{ user.username }}!</p>
 
 <!-- Карточки с показателями -->
@@ -39,7 +39,7 @@
 
 <!-- Последние процедуры -->
 <div style="background: white; border-radius: 24px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
-    <h3 style="margin-top: 0; margin-bottom: 20px;">🕒 Последние выполненные процедуры</h3>
+    <h3 style="margin-top: 0; margin-bottom: 20px;">Последние выполненные процедуры</h3>
     {% if latest_procedures %}
         <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse;">
@@ -55,11 +55,11 @@
                 <tbody>
                     {% for proc in latest_procedures %}
                         <tr style="border-bottom: 1px solid #fce7f3;">
-                            <td style="padding: 12px;">{{ proc.date|date:"d.m.Y H:i" }}<\/td>
-                            <td style="padding: 12px;">{{ proc.client.last_name }} {{ proc.client.first_name }}<\/td>
-                            <td style="padding: 12px;">{{ proc.service.name }}<\/td>
-                            <td style="padding: 12px;">{{ proc.employee.last_name }} {{ proc.employee.first_name }}<\/td>
-                            <td style="padding: 12px; color: #db2777; font-weight: 500;">{{ proc.price_at_moment }} ₽<\/td>
+                            <td style="padding: 12px;">{{ proc.date|date:"d.m.Y H:i" }}</td>
+                            <td style="padding: 12px;">{{ proc.client.last_name }} {{ proc.client.first_name }}</td>
+                            <td style="padding: 12px;">{{ proc.service.name }}</td>
+                            <td style="padding: 12px;">{{ proc.employee.last_name }} {{ proc.employee.first_name }}</td>
+                            <td style="padding: 12px; color: #db2777; font-weight: 500;">{{ proc.price_at_moment }} ₽</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -71,6 +71,6 @@
 </div>
 
 <div style="margin-top: 30px; text-align: center;">
-    <a href="{% url 'reports_index' %}" class="btn">📊 Перейти к полным отчётам</a>
+    <a href="{% url 'reports_index' %}" class="btn">Перейти к полным отчётам</a>
 </div>
 {% endblock %}

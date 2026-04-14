@@ -4,7 +4,7 @@
 
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-    <h2>📅 Предварительные записи</h2>
+    <h2>Предварительные записи</h2>
     {% if user.groups.all.0.name == 'Администратор' %}
         <a href="{% url 'appointment_add' %}" class="btn">+ Новая запись</a>
     {% endif %}

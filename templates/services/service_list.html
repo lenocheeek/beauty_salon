@@ -4,7 +4,7 @@
 
 {% block content %}
 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
-    <h2>💅 Услуги салона</h2>
+    <h2>Услуги салона</h2>
     {% if user.groups.all.0.name == 'Администратор' %}
         <a href="{% url 'service_add' %}" class="btn">+ Добавить услугу</a>
     {% endif %}
